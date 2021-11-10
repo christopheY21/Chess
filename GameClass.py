@@ -16,6 +16,10 @@ class Rook(ChessPiece):
         super().__init__(chessBoard, positionY, positionX, color)
     def move(self, positionX, positionY):
         return super().move(positionX, positionY)
+    def possibleMove(self):
+        #Deplacement verticale
+        
+        return super().possibleMove()
     def __str__(self):
         return super().__str__()
 class King(ChessPiece):
@@ -73,8 +77,14 @@ class ChessBoard():
         self.board[-1][3]=Queen(self,8-1,3,"White")
         self.board[-1][4]=King(self,8-1,4,"White")
         
-    def terminal_test():
+    def terminal_test(self):
         pass
+    def startTheGame(self):
+        while(not self.terminal_test()):
+            if(self.state==1):##White have to play
+                pass
+            elif(self.state==0):##Black have to play
+                pass
     def showBoard(self):
         for rows in self.board:
             print([str(i) for i in rows])
