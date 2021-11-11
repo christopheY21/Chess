@@ -42,38 +42,42 @@ class Rook(ChessPiece):
     def possibleMove(self):
         movesList=[]
         #Deplacement verticale
-        for i in range((self.positionY)+1,8):
+        for i in range((self.y)+1,8):
             #On monte verticalement
             #3 cas (1): Cases vides / (2) :pion allié / (3):pion ennemi
-            if(type(self.chessBoard[i][self.positionX])==Cases):
-                movesList.append((self.positionX,i))
-            elif(self.chessBoard[i][self.positionX].color==self.color):
+            if(type(self.chessBoard.board[i][self.x])==Cases):
+                movesList.append((self.x,i))
+            elif(self.chessBoard.board[i][self.x].color==self.color):
                 break
             else:
-                movesList.append((self.positionX,i))
-        for i in range(0,self.positionY):
-             if(type(self.chessBoard[i][self.positionX])==Cases):
-                movesList.append((self.positionX,i))
-            elif(self.chessBoard[i][self.positionX].color==self.color):
+                movesList.append((self.x,i))
+                break
+        for i in range(0,self.y):
+            if(type(self.chessBoard.board[i][self.x])==Cases):
+                movesList.append((self.x,i))
+            elif(self.chessBoard.board[i][self.x].color==self.color):
                 break
             else:
-                movesList.append((self.positionX,i))
+                movesList.append((self.x,i))
+                break
         #Deplacement horizontale
-        for j in range(self.positionX+1,8):
-            if(type(self.chessBoard[self.positionY][i])==Cases):
-                movesList.append((i,self.positionY))
-            elif(self.chessBoard[self.positionY][i].color==self.color):
+        for j in range(self.x+1,8):
+            if(type(self.chessBoard.board[self.y][i])==Cases):
+                movesList.append((i,self.y))
+            elif(self.chessBoard.board[self.y][i].color==self.color):
                 break
             else:
-                movesList.append((i,self.positionY))
-        for j in range(0,self.positionX):
-            if(type(self.chessBoard[self.positionY][i])==Cases):
-                movesList.append((i,self.positionY))
-            elif(self.chessBoard[self.positionY][i].color==self.color):
+                movesList.append((i,self.y))
+                break
+        for j in range(0,self.x):
+            if(type(self.chessBoard.board[self.y][i])==Cases):
+                movesList.append((i,self.y))
+            elif(self.chessBoard.board[self.y][i].color==self.color):
                 break
             else:
-                movesList.append((i,self.positionY))
-        return super().possibleMove()
+                movesList.append((i,self.y))
+                break
+        return movesList
     def __str__(self):
         return super().__str__()
 class King(ChessPiece):
@@ -155,5 +159,7 @@ class ChessBoard():
 
 chess=ChessBoard()
 chess.showBoard()
-
-print(type(chess.board[3][3])==Cases)
+chess.board[1][0]=Cases(1,0)
+print("*"*20)
+chess.showBoard()
+print(chess.board[0][0].possibleMove())
