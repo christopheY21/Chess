@@ -1,6 +1,6 @@
 class ChessPiece():
-    unicodeCharBlack="0"
-    unicodeCharWhite="0"
+    unicodeCharBlack="\u25A0"
+    unicodeCharWhite="\u25A1"
     def __init__(self,chessBoard,positionY,positionX,color) -> None:
         self.chessBoard=chessBoard
         self.color=color
