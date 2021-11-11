@@ -92,3 +92,4 @@ class ChessBoard():
 chess=ChessBoard()
 chess.showBoard()
 print(chess.board[0][0].y)
+print("test")
