@@ -1,4 +1,6 @@
 class ChessPiece():
+    unicodeCharBlack="0"
+    unicodeCharWhite="0"
     def __init__(self,chessBoard,positionY,positionX,color) -> None:
         self.chessBoard=chessBoard
         self.color=color
@@ -10,19 +12,73 @@ class ChessPiece():
         self.x=positionX
         self.y=positionY
     def __str__(self):
-        return self.color+" "+self.__class__.__name__
+        if(self.color=="Black"):
+            return self.unicodeCharBlack
+        else:
+            return self.unicodeCharWhite
+class Cases():
+    unicodeCharBlack="\u25A0"
+    unicodeCharWhite="\u25A1"
+    def __init__(self,positionY,positionX):
+        self.x=positionX
+        self.y=positionY
+        if((positionY+positionX)%2==0):
+            self.color="White"
+        else:
+            self.color="Black"
+    def __str__(self):
+        if(self.color=="Black"):
+            return self.unicodeCharBlack
+        else:
+            return self.unicodeCharWhite
 class Rook(ChessPiece):
+    unicodeCharBlack="\u265C"
+    unicodeCharWhite="\u2656"
     def __init__(self, chessBoard, positionY, positionX, color) -> None:
         super().__init__(chessBoard, positionY, positionX, color)
+        
     def move(self, positionX, positionY):
         return super().move(positionX, positionY)
     def possibleMove(self):
+        movesList=[]
         #Deplacement verticale
-        
+        for i in range((self.positionY)+1,8):
+            #On monte verticalement
+            #3 cas (1): Cases vides / (2) :pion allié / (3):pion ennemi
+            if(type(self.chessBoard[i][self.positionX])==Cases):
+                movesList.append((self.positionX,i))
+            elif(self.chessBoard[i][self.positionX].color==self.color):
+                break
+            else:
+                movesList.append((self.positionX,i))
+        for i in range(0,self.positionY):
+             if(type(self.chessBoard[i][self.positionX])==Cases):
+                movesList.append((self.positionX,i))
+            elif(self.chessBoard[i][self.positionX].color==self.color):
+                break
+            else:
+                movesList.append((self.positionX,i))
+        #Deplacement horizontale
+        for j in range(self.positionX+1,8):
+            if(type(self.chessBoard[self.positionY][i])==Cases):
+                movesList.append((i,self.positionY))
+            elif(self.chessBoard[self.positionY][i].color==self.color):
+                break
+            else:
+                movesList.append((i,self.positionY))
+        for j in range(0,self.positionX):
+            if(type(self.chessBoard[self.positionY][i])==Cases):
+                movesList.append((i,self.positionY))
+            elif(self.chessBoard[self.positionY][i].color==self.color):
+                break
+            else:
+                movesList.append((i,self.positionY))
         return super().possibleMove()
     def __str__(self):
         return super().__str__()
 class King(ChessPiece):
+    unicodeCharBlack="\u265A"
+    unicodeCharWhite="\u2654"
     def __init__(self, chessBoard, positionY, positionX, color) -> None:
         super().__init__(chessBoard, positionY, positionX, color)
     def move(self, positionX, positionY):
@@ -30,6 +86,8 @@ class King(ChessPiece):
     def __str__(self):
         return super().__str__()
 class Queen(ChessPiece):
+    unicodeCharBlack="\u265A"
+    unicodeCharWhite="\u2655"
     def __init__(self, chessBoard, positionY, positionX, color) -> None:
         super().__init__(chessBoard, positionY, positionX, color)
     def move(self, positionX, positionY):
@@ -37,6 +95,8 @@ class Queen(ChessPiece):
     def __str__(self):
         return super().__str__()
 class Bishop(ChessPiece):
+    unicodeCharBlack="\u265D"
+    unicodeCharWhite="\u2657"
     def __init__(self, chessBoard, positionY, positionX, color) -> None:
         super().__init__(chessBoard, positionY, positionX, color)
     def move(self, positionX, positionY):
@@ -44,6 +104,8 @@ class Bishop(ChessPiece):
     def __str__(self):
         return super().__str__()
 class Pawn(ChessPiece):
+    unicodeCharBlack="\u265F"
+    unicodeCharWhite="\u2659"
     def __init__(self, chessBoard, positionY, positionX, color) -> None:
         super().__init__(chessBoard, positionY, positionX, color)
     def move(self, positionX, positionY):
@@ -51,6 +113,8 @@ class Pawn(ChessPiece):
     def __str__(self):
         return super().__str__()
 class Knight(ChessPiece):
+    unicodeCharBlack="\u265E"
+    unicodeCharWhite="\u2658"
     def __init__(self, chessBoard, positionY, positionX, color) -> None:
         super().__init__(chessBoard, positionY, positionX, color)
     def move(self, positionX, positionY):
@@ -61,7 +125,7 @@ class ChessBoard():
     def __init__(self):
         self.state=1# 0 Black : 1 White -> state white have to play
         self.turn=1
-        self.board=[[0 for _ in range(8)] for _ in range(8)]
+        self.board=[[Cases(j,i) for i in range(8)] for j in range(8)]
         #Filling the board
         for i in range(8):
             self.board[1][i]=Pawn(self,1,i,"Black")
@@ -91,5 +155,5 @@ class ChessBoard():
 
 chess=ChessBoard()
 chess.showBoard()
-print(chess.board[0][0].y)
-print("test")
+
+print(type(chess.board[3][3])==Cases)
