@@ -16,10 +16,10 @@ class ChessPiece():
         #3 cas (1): Cases vides / (2) :pion allié / (3):pion ennemi
         if(type(self.chessBoard.board[y][x])==Cases):
             movesList.append((x,y))
-        elif(self.chessBoard.board[y][x].color==self.color):
+        elif(self.chessBoard.board[y][x].color!=self.color):
+            movesList.append((x,y))
             stopMove=True
         else:
-            movesList.append((x,y))
             stopMove=True
         return stopMove
     def __str__(self):
@@ -81,7 +81,13 @@ class King(ChessPiece):
         return super().move(positionX, positionY)
     def possibleMove(self):
         movesList=[]
-
+        #C'est toute les cases théoriques où le roi peut se déplacer
+        theoryMoves=[]
+        for i in range(self.x-1,self.x+2):
+            for j in range(self.y-1,self.y+2):
+                theoryMoves.append((i,j))
+        for move in theoryMoves:
+            self.moveChecker(move[0],move[1],movesList)
         return movesList
     def __str__(self):
         return super().__str__()
@@ -101,6 +107,10 @@ class Bishop(ChessPiece):
         super().__init__(chessBoard, positionY, positionX, color)
     def move(self, positionX, positionY):
         return super().move(positionX, positionY)
+
+    def possibleMove(self):
+        
+        return super().possibleMove()
     def __str__(self):
         return super().__str__()
 class Pawn(ChessPiece):
@@ -150,13 +160,18 @@ class ChessBoard():
             elif(self.state==0):##Black have to play
                 pass
     def showBoard(self):
+        print([str(i) for i in range(8)])
+        i=0
         for rows in self.board:
-            print([str(i) for i in rows])
-
+            print([str(i) for i in rows],end=" ")
+            print(i)
+            i+=1
 chess=ChessBoard()
 chess.showBoard()
 chess.board[1][0]=Cases(1,0)
+chess.board[5][3]=King(chess,5,3,"Black")
+chess.board[6][3]=Pawn(chess,6,3,"Black")
 print("*"*20)
 chess.showBoard()
-print(chess.board[0][0].possibleMove())
-print(chess.board[0][0].possibleMove2())
+
+print(chess.board[5][3].possibleMove())
