@@ -53,20 +53,20 @@ class Rook(ChessPiece):
     def possibleMove(self):
         movesList=[]
         #Déplacement verticale ascendant
-        for i in range((self.y)+1,8):
-            if(self.moveChecker(self.x,i,movesList)):
+        for j in range((self.y)+1,8):
+            if(self.moveChecker(self.x,j,movesList)):
                 break
         #Descendant
-        for i in range(0,self.y):
-            if(self.moveChecker(self.x,i,movesList)):
+        for j in range(self.y,-1,-1):
+            if(self.moveChecker(self.x,j,movesList)):
                 break
         #Déplacement horizontale ascendant
-        for j in range(self.x+1,8):
-            if(self.moveChecker(j,self.y,movesList)):
+        for i in range(self.x+1,8):
+            if(self.moveChecker(i,self.y,movesList)):
                 break
         #Déscendant
-        for j in range(0,self.x):
-            if(self.moveChecker(j,self.y,movesList)):
+        for i in range(self.x,-1,-1):
+            if(self.moveChecker(i,self.y,movesList)):
                 break
         return movesList
     def __str__(self):
@@ -109,8 +109,24 @@ class Bishop(ChessPiece):
         return super().move(positionX, positionY)
 
     def possibleMove(self):
-        
-        return super().possibleMove()
+        movesList=[]
+        #diagonale haut droite
+        for i,j in zip(range(self.x+1,8),range(self.y+1,8)):
+            if(self.moveChecker(i,j,movesList)):
+                break
+        #diagonal bas gauche
+        for i,j in zip(range(self.x-1,-1,-1),range(self.y-1,-1,-1)):
+            if(self.moveChecker(i,j,movesList)):
+                break
+        #diagonal bas droite
+        for i,j in zip(range(self.x-1,-1,-1),range(self.y+1,8)):
+            if(self.moveChecker(i,j,movesList)):
+                break
+        #diagonal haut gauche
+        for i,j in zip(range(self.x+1,8),range(self.y-1,-1,-1)):
+            if(self.moveChecker(i,j,movesList)):
+                break
+        return movesList
     def __str__(self):
         return super().__str__()
 class Pawn(ChessPiece):
@@ -120,6 +136,17 @@ class Pawn(ChessPiece):
         super().__init__(chessBoard, positionY, positionX, color)
     def move(self, positionX, positionY):
         return super().move(positionX, positionY)
+    def possibleMove(self):
+        movesList=[]
+        avance=1
+        if(self.color=="White"):
+            avance=-1
+        for i in range(self.x-1,self.x+2):
+            self.moveChecker(i,self.y+avance,movesList)
+            if(self.x!=i and type(self.chessBoard.board[self.y+avance][i])==Cases):
+                movesList.remove((i,self.y+avance))
+                
+        return movesList
     def __str__(self):
         return super().__str__()
 class Knight(ChessPiece):
@@ -129,6 +156,16 @@ class Knight(ChessPiece):
         super().__init__(chessBoard, positionY, positionX, color)
     def move(self, positionX, positionY):
         return super().move(positionX, positionY)
+    def possibleMove(self):
+        movesList=[]
+        theoryMoves=[
+            (self.x+1,self.y+2),
+            (self.x-1,self.y+2),
+            (self.x+2,self.y+1),
+            (self.x+2,self.y-1)
+        ]
+        movesList=[i for i in theoryMoves if i[0]>=0 and i[0]<8 and i[1]>=0 and i[1]<8]
+        return super().possibleMove()
     def __str__(self):
         return super().__str__()
 class ChessBoard(): 
@@ -169,8 +206,7 @@ class ChessBoard():
 chess=ChessBoard()
 chess.showBoard()
 chess.board[1][0]=Cases(1,0)
-chess.board[5][3]=King(chess,5,3,"Black")
-chess.board[6][3]=Pawn(chess,6,3,"Black")
+chess.board[5][3]=Pawn(chess,5,3,"Black")
 print("*"*20)
 chess.showBoard()
 
