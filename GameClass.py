@@ -178,11 +178,17 @@ class Pawn(ChessPiece):
         avance=1
         if(self.color=="White"):
             avance=-1
-        for i in range(self.x-1,self.x+2):
+        start=self.x-1
+        end=self.x+1
+        if(start<0):
+            start=self.x
+        if(end>8-1):
+            end=self.x
+        for i in range(start,end+1):
             self.moveChecker(i,self.y+avance,movesList)
             if(self.x!=i and type(self.chessBoard.board[self.y+avance][i])==Cases):
                 movesList.remove((i,self.y+avance))
-                
+        print(movesList)
         return movesList
     def __str__(self):
         return super().__str__()
@@ -201,8 +207,10 @@ class Knight(ChessPiece):
             (self.x+2,self.y+1),
             (self.x+2,self.y-1)
         ]
-        movesList=[i for i in theoryMoves if i[0]>=0 and i[0]<8 and i[1]>=0 and i[1]<8]
-        return super().possibleMove()
+        theoryMoves=[i for i in theoryMoves if i[0]>=0 and i[0]<8 and i[1]>=0 and i[1]<8]
+        for move in theoryMoves:
+            self.moveChecker(move[0],move[1],movesList)
+        return movesList
     def __str__(self):
         return super().__str__()
 class ChessBoard(): 
@@ -235,6 +243,15 @@ class ChessBoard():
             for j in range(6,8):
                 self.whitePiecesList.append(self.board[j][i])
         print(self.blackPiecesList)
+    def possibleMove(self,color):
+        movesList=[]
+        if(color=="Black"):
+            for piece in self.blackPiecesList:
+                movesList.extend(piece.possibleMove())
+        else:
+            for piece in self.whitePiecesList:
+                movesList.extend(piece.possibleMove())
+        return movesList
     def terminal_test(self):
        #TODO
        # ECHEC
@@ -256,9 +273,5 @@ class ChessBoard():
             i+=1
 chess=ChessBoard()
 chess.showBoard()
-chess.board[1][0]=Cases(1,0)
-chess.board[5][3]=Queen(chess,5,3,"Black")
-print("*"*20)
-chess.showBoard()
-
-print(chess.board[5][3].possibleMove())
+print(len(chess.possibleMove("Black")))
+print(chess.possibleMove("Black"))
