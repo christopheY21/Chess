@@ -98,6 +98,43 @@ class Queen(ChessPiece):
         super().__init__(chessBoard, positionY, positionX, color)
     def move(self, positionX, positionY):
         return super().move(positionX, positionY)
+
+    def possibleMove(self):
+        movesList=[]
+        #Déplacement verticale ascendant
+        for j in range((self.y)+1,8):
+            if(self.moveChecker(self.x,j,movesList)):
+                break
+        #Descendant
+        for j in range(self.y,-1,-1):
+            if(self.moveChecker(self.x,j,movesList)):
+                break
+        #Déplacement horizontale ascendant
+        for i in range(self.x+1,8):
+            if(self.moveChecker(i,self.y,movesList)):
+                break
+        #Déscendant
+        for i in range(self.x,-1,-1):
+            if(self.moveChecker(i,self.y,movesList)):
+                break
+        #diagonale haut droite
+        for i,j in zip(range(self.x+1,8),range(self.y+1,8)):
+            if(self.moveChecker(i,j,movesList)):
+                break
+        #diagonal bas gauche
+        for i,j in zip(range(self.x-1,-1,-1),range(self.y-1,-1,-1)):
+            if(self.moveChecker(i,j,movesList)):
+                break
+        #diagonal bas droite
+        for i,j in zip(range(self.x-1,-1,-1),range(self.y+1,8)):
+            if(self.moveChecker(i,j,movesList)):
+                break
+        #diagonal haut gauche
+        for i,j in zip(range(self.x+1,8),range(self.y-1,-1,-1)):
+            if(self.moveChecker(i,j,movesList)):
+                break
+        return movesList
+        
     def __str__(self):
         return super().__str__()
 class Bishop(ChessPiece):
@@ -187,9 +224,23 @@ class ChessBoard():
         self.board[0][4]=King(self,0,4,"Black")
         self.board[-1][3]=Queen(self,8-1,3,"White")
         self.board[-1][4]=King(self,8-1,4,"White")
-        
+        self.blackPiecesList=[]
+        self.whitePiecesList=[]
+        #complete black list pieces
+        for i in range(8):
+            for j in range(2):
+                self.blackPiecesList.append(self.board[j][i])
+        #complete white list pieces
+        for i in range(8):
+            for j in range(6,8):
+                self.whitePiecesList.append(self.board[j][i])
+        print(self.blackPiecesList)
     def terminal_test(self):
-        pass
+       #TODO
+       # ECHEC
+       #RETIRER TOUT LES MOUVEMENTS QUI NE PROTEGE PAS LE ROI
+       # ECHEC ET MAT 
+       pass
     def startTheGame(self):
         while(not self.terminal_test()):
             if(self.state==1):##White have to play
@@ -206,7 +257,7 @@ class ChessBoard():
 chess=ChessBoard()
 chess.showBoard()
 chess.board[1][0]=Cases(1,0)
-chess.board[5][3]=Pawn(chess,5,3,"Black")
+chess.board[5][3]=Queen(chess,5,3,"Black")
 print("*"*20)
 chess.showBoard()
 
