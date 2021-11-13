@@ -86,6 +86,7 @@ class King(ChessPiece):
         for i in range(self.x-1,self.x+2):
             for j in range(self.y-1,self.y+2):
                 theoryMoves.append((i,j))
+        theoryMoves=[i for i in theoryMoves if i[0]>=0 and i[0]<8 and i[1]>=0 and i[1]<8]
         for move in theoryMoves:
             self.moveChecker(move[0],move[1],movesList)
         return movesList
@@ -171,11 +172,15 @@ class Pawn(ChessPiece):
     unicodeCharWhite="\u2659"
     def __init__(self, chessBoard, positionY, positionX, color) -> None:
         super().__init__(chessBoard, positionY, positionX, color)
+        self.moved=False
     def move(self, positionX, positionY):
         return super().move(positionX, positionY)
     def possibleMove(self):
         movesList=[]
         avance=1
+        numberMoveCase=1
+        if(not self.moved):
+            numberMoveCase=2
         if(self.color=="White"):
             avance=-1
         start=self.x-1
@@ -185,10 +190,11 @@ class Pawn(ChessPiece):
         if(end>8-1):
             end=self.x
         for i in range(start,end+1):
-            self.moveChecker(i,self.y+avance,movesList)
-            if(self.x!=i and type(self.chessBoard.board[self.y+avance][i])==Cases):
-                movesList.remove((i,self.y+avance))
-        print(movesList)
+            for j in range(1,numberMoveCase+1):
+                self.moveChecker(i,self.y+(j*avance),movesList)
+                if(self.x!=i and type(self.chessBoard.board[self.y+(j*avance)][i])==Cases):
+                    movesList.remove((i,self.y+(j*avance)))
+
         return movesList
     def __str__(self):
         return super().__str__()
@@ -243,7 +249,7 @@ class ChessBoard():
             for j in range(6,8):
                 self.whitePiecesList.append(self.board[j][i])
         print(self.blackPiecesList)
-    def possibleMove(self,color):
+    def theoryPossibleMove(self,color):
         movesList=[]
         if(color=="Black"):
             for piece in self.blackPiecesList:
@@ -251,13 +257,33 @@ class ChessBoard():
         else:
             for piece in self.whitePiecesList:
                 movesList.extend(piece.possibleMove())
+        if(self.echec()):
+            pass
         return movesList
-    def terminal_test(self):
-       #TODO
+    def echec(self):
        # ECHEC
-       #RETIRER TOUT LES MOUVEMENTS QUI NE PROTEGE PAS LE ROI
-       # ECHEC ET MAT 
-       pass
+        kingPosition=(0,0)
+        if(self.state==0):#Black
+            for piece in self.blackPiecesList:
+                if(piece==King):
+                    kingPosition=(piece.x,piece.y)
+            movesList=self.theoryPossibleMove("White")
+            if(kingPosition in movesList):
+                return True
+        else:
+            movesList=self.theoryPossibleMove("Black")
+            for piece in self.whitePiecesList:
+                if(piece==King):
+                    kingPosition=(piece.x,piece.y)
+            if(kingPosition in movesList):
+                return True
+        return False
+    def possibleMove(self):
+        movesList=self.theoryPossibleMove()
+        if(self.echec()):
+            #remove all the actiions that don't defend the king
+            pass
+        return movesList
     def startTheGame(self):
         while(not self.terminal_test()):
             if(self.state==1):##White have to play
