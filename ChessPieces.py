@@ -92,12 +92,13 @@ class King(ChessPiece):
 
         #Removes cases that are attacked
         opposingMovesList=[]
-        if(self.chessBoard.state==-1):#Black have to play
-            for piece in self.chessBoard.whiteList:
-                opposingMovesList.append(piece.possibleMove())
-        else:#White have to play
-            for piece in self.chessBoard.blackList:
-                opposingMovesList.append(piece.possibleMove())
+        if(self.chessBoard.state==1):
+            piecesList=self.chessBoard.whitePiecesList
+        else:
+            piecesList=self.chessBoard.blackPiecesList
+        piecesList.remove(self)
+        for piece in self.chessBoard.whitePiecesList:
+            opposingMovesList.extend(piece.possibleMove())
         for kingMove in movesList:
             for attackerMove in opposingMovesList:
                 if((kingMove[0],kingMove[1])==(attackerMove[0],attackerMove[1])):
@@ -206,7 +207,8 @@ class Pawn(ChessPiece):
             for j in range(1,numberMoveCase+1):
                 self.moveChecker(i,self.y+(j*avance),movesList)
                 if(self.x!=i and type(self.chessBoard.board[self.y+(j*avance)][i])==Cases):
-                    movesList.remove((i,self.y+(j*avance),self))
+                    #movesList.remove((i,self.y+(j*avance),self))
+                    pass
 
         return movesList
     def __str__(self):

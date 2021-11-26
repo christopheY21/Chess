@@ -33,10 +33,15 @@ class ChessBoard():
         movesList=[]
         if(color=="Black"):
             for piece in self.blackPiecesList:
+
                 movesList.extend(piece.possibleMove())
         else:
+
             for piece in self.whitePiecesList:
+                print(str(piece))
+                print(len(piece.possibleMove()))
                 movesList.extend(piece.possibleMove())
+        
         return movesList
     def echec(self):
        # ECHEC
@@ -58,7 +63,7 @@ class ChessBoard():
             if(kingPosition==(moves[0],moves[1])):
                     attackingPiecesList.append(moves[2])
         return attackingPiecesList
-    def possibleMove(self):
+    def boardPossibleMove(self):
         if(self.state==-1):
             colorPlay="Black"
         else:
@@ -72,9 +77,11 @@ class ChessBoard():
         else:
             piecesList=self.blackPiecesList
         if(attackerList!=[]):
+            kingPosition=(-1,-1)
             for piece in piecesList:
                 if(piece==ChessPieces.King):
                     kingPosition=(piece.x,piece.y)
+                    break
             #add only the moves that defend the king
             for attacker in attackerList:
                 horizontalAdvance=0
@@ -112,25 +119,31 @@ class ChessBoard():
             return movesList
         return possibleMovesList
     def movePieces(self,moves):#moves is the a tuple from movesList
-        self.board[moves[2].y][moves[2].x]=ChessPieces.Cases()
+        self.board[moves[2].y][moves[2].x]=ChessPieces.Cases(moves[2].y,moves[2].x)
         moves[2].move(moves[0],moves[1])
         self.board[moves[1]][moves[0]]=moves[2]
     def terminal_test(self):
-        if(self.possibleMove()==[]):
+        boardMoves=self.boardPossibleMove()
+        if(boardMoves==[]):
             print("Partie terminé")
+            print("Nombres de tours :{}".format(self.turn))
+            print("Victoire de {}".format(self.state*(-1)))
+            print(self.echec()[0].color)
             return True
         return False
     def startTheGame(self):
         while(not self.terminal_test()):
-            movesList=self.possibleMove()
-            print(movesList)
-            #chooseMove=int(input("Which move do you chose ?"))
-            chooseMove=0
+            self.showBoard()
+            movesList=self.boardPossibleMove()
+            movesListStr=[(i[0],i[1],str(i[2])) for i in movesList]
+            chooseMove=int(input("Which move do you chose ?"))
+            #chooseMove=0
             if(self.state==1):##White have to play
                 self.movePieces(movesList[chooseMove])
             elif(self.state==-1):##Black have to play
                 self.movePieces(movesList[chooseMove])
             self.state*=-1
+            self.turn+=1
     def showBoard(self):
         print([str(i) for i in range(8)])
         i=0
@@ -141,3 +154,4 @@ class ChessBoard():
 chess=ChessBoard()
 
 chess.startTheGame()
+chess.showBoard()
