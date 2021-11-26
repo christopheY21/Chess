@@ -28,7 +28,7 @@ class ChessBoard():
         for i in range(8):
             for j in range(6,8):
                 self.whitePiecesList.append(self.board[j][i])
-        print(self.blackPiecesList)
+        
     def theoryPossibleMove(self,color):
         movesList=[]
         if(color=="Black"):
@@ -59,7 +59,11 @@ class ChessBoard():
                     attackingPiecesList.append(moves[2])
         return attackingPiecesList
     def possibleMove(self):
-        movesList=self.theoryPossibleMove()
+        if(self.state==-1):
+            colorPlay="Black"
+        else:
+            colorPlay="White"
+        movesList=self.theoryPossibleMove(colorPlay)
         possibleMovesList=[]
         attackerList=self.echec()
         piecesList=[]
@@ -107,20 +111,25 @@ class ChessBoard():
         else:
             return movesList
         return possibleMovesList
+    def movePieces(self,moves):#moves is the a tuple from movesList
+        self.board[moves[2].y][moves[2].x]=ChessPieces.Cases()
+        moves[2].move(moves[0],moves[1])
+        self.board[moves[1]][moves[0]]=moves[2]
     def terminal_test(self):
         if(self.possibleMove()==[]):
+            print("Partie terminé")
             return True
         return False
     def startTheGame(self):
         while(not self.terminal_test()):
             movesList=self.possibleMove()
             print(movesList)
-            chooseMove=int(input("Which move do you chose ?"))
+            #chooseMove=int(input("Which move do you chose ?"))
+            chooseMove=0
             if(self.state==1):##White have to play
-                pass
+                self.movePieces(movesList[chooseMove])
             elif(self.state==-1):##Black have to play
-                pass
-
+                self.movePieces(movesList[chooseMove])
             self.state*=-1
     def showBoard(self):
         print([str(i) for i in range(8)])
@@ -130,5 +139,5 @@ class ChessBoard():
             print(i)
             i+=1
 chess=ChessBoard()
-chess.showBoard()
-test=chess.board[1][0].possibleMove()
+
+chess.startTheGame()
