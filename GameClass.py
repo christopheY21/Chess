@@ -64,7 +64,7 @@ class ChessBoard():
         attackerList=self.echec()
         if(attackerList!=[]):
             #remove all the actions that don't defend the king
-            for piece
+            pass
         return possibleMovesList
     def startTheGame(self):
         while(not self.terminal_test()):
