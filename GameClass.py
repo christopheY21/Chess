@@ -72,33 +72,30 @@ class ChessBoard():
                 if(piece==ChessPieces.King):
                     kingPosition=(piece.x,piece.y)
             #add only the moves that defend the king
-            #Eating attacking piece
-            for move in movesList:
-                for attacker in attackerList:
-                    if((move[0],move[1])==(attacker.x,attacker.y)):
-                        possibleMovesList.append(move)
             for attacker in attackerList:
-                if(kingPosition[0]==attacker.x or kingPosition[1]==attacker.y):#attacker attack on line vertical
+                horizontalAdvance=0
+                verticalAdvance=0
+                if((kingPosition[0]-attacker.x)<0):
+                    horizontalAdvance=1
+                else:
+                    horizontalAdvance=-1
+                if((kingPosition[1]-attacker.y)<0):
+                    verticalAdvance=1
+                else:
+                    verticalAdvance=-1
+                if(kingPosition[0]==attacker.x):#attacker attack on line vertical
+                    verticalDangerZone=[]
                     for move in movesList:
-                        if(move[0]==attacker.x):
+                        if(move[0]==attacker.x and (move[0]-attacker.x)*horizontalAdvance<=0):
                             possibleMovesList.append(move)
                 elif(kingPosition[1]==attacker.y):#attacker attack on line horizontal
                     for move in movesList:
-                        if(move[1]==attacker.y):
+                        if(move[1]==attacker.y and (move[1]-attacker.y)*verticalAdvance<=0):
                             possibleMovesList.append(move)
             
                 else:#attack on diagonal
                     diagonalDangerZone=[]
-                    horizontalAdvance=0
-                    verticalAdvance=0
-                    if((kingPosition[0]-attacker.x)<0):
-                        horizontalAdvance=1
-                    else:
-                        horizontalAdvance=-1
-                    if((kingPosition[1]-attacker.y)<0):
-                        verticalAdvance=1
-                    else:
-                        verticalAdvance=-1
+                    
                     for i,j in zip(range(kingPosition[0]+1,attacker.x,horizontalAdvance),
                                     range(kingPosition[1]+1,attacker.y,verticalAdvance)):
                         if(self.moveChecker(i,j,diagonalDangerZone)):
