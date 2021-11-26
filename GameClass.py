@@ -107,13 +107,24 @@ class ChessBoard():
                         for dangerMove in diagonalDangerZone:
                             if(move[0]==dangerMove[0 and move[1]==dangerMove[1]]):
                                 possibleMovesList.append(move)
+        else:
+            return movesList
         return possibleMovesList
+    def terminal_test(self):
+        if(self.possibleMove()==[]):
+            return True
+        return False
     def startTheGame(self):
         while(not self.terminal_test()):
+            movesList=self.possibleMove()
+            print(movesList)
+            chooseMove=int(input("Which move do you chose ?"))
             if(self.state==1):##White have to play
                 pass
             elif(self.state==-1):##Black have to play
                 pass
+
+            self.state*=-1
     def showBoard(self):
         print([str(i) for i in range(8)])
         i=0
