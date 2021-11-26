@@ -62,9 +62,51 @@ class ChessBoard():
         movesList=self.theoryPossibleMove()
         possibleMovesList=[]
         attackerList=self.echec()
+        piecesList=[]
+        if(self.state==1):#White have to play
+            piecesList=self.whitePiecesList
+        else:
+            piecesList=self.blackPiecesList
         if(attackerList!=[]):
-            #remove all the actions that don't defend the king
-            pass
+            for piece in piecesList:
+                if(piece==ChessPieces.King):
+                    kingPosition=(piece.x,piece.y)
+            #add only the moves that defend the king
+            #Eating attacking piece
+            for move in movesList:
+                for attacker in attackerList:
+                    if((move[0],move[1])==(attacker.x,attacker.y)):
+                        possibleMovesList.append(move)
+            for attacker in attackerList:
+                if(kingPosition[0]==attacker.x or kingPosition[1]==attacker.y):#attacker attack on line vertical
+                    for move in movesList:
+                        if(move[0]==attacker.x):
+                            possibleMovesList.append(move)
+                elif(kingPosition[1]==attacker.y):#attacker attack on line horizontal
+                    for move in movesList:
+                        if(move[1]==attacker.y):
+                            possibleMovesList.append(move)
+            
+                else:#attack on diagonal
+                    diagonalDangerZone=[]
+                    horizontalAdvance=0
+                    verticalAdvance=0
+                    if((kingPosition[0]-attacker.x)<0):
+                        horizontalAdvance=1
+                    else:
+                        horizontalAdvance=-1
+                    if((kingPosition[1]-attacker.y)<0):
+                        verticalAdvance=1
+                    else:
+                        verticalAdvance=-1
+                    for i,j in zip(range(kingPosition[0]+1,attacker.x,horizontalAdvance),
+                                    range(kingPosition[1]+1,attacker.y,verticalAdvance)):
+                        if(self.moveChecker(i,j,diagonalDangerZone)):
+                            break
+                    for move in movesList:
+                        for dangerMove in diagonalDangerZone:
+                            if(move[0]==dangerMove[0 and move[1]==dangerMove[1]]):
+                                possibleMovesList.append(move)
         return possibleMovesList
     def startTheGame(self):
         while(not self.terminal_test()):
