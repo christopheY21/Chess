@@ -149,8 +149,9 @@ class ChessBoard():
             self.showBoard()
             movesList=self.boardPossibleMove()
             movesListStr=[(i[0],i[1],str(i[2])) for i in movesList]
-            #chooseMove=int(input("Which move do you chose ?"))
-            chooseMove=0
+            print(movesListStr)
+            chooseMove=int(input("Which move do you chose ?"))
+            #chooseMove=0
             if(self.state==1):##White have to play
                 self.movePieces(movesList[chooseMove])
             elif(self.state==-1):##Black have to play

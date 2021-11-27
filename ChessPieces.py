@@ -250,9 +250,11 @@ class Knight(ChessPiece):
             (self.x+2,self.y+1),
             (self.x+2,self.y-1)
         ]
-        theoryMoves=[i for i in theoryMoves if i[0]>=0 and i[0]<8 and i[1]>=0 and i[1]<8]
+        #theoryMoves=[i for i in theoryMoves if i[0]>=0 and i[0]<8 and i[1]>=0 and i[1]<8]
+        print(theoryMoves)
         for move in theoryMoves:
             self.moveChecker(move[0],move[1],movesList)
+        print(movesList)
         return movesList
     def __str__(self):
         return super().__str__()
