@@ -118,12 +118,12 @@ class ChessBoard():
         else:
             possibleMovesList=movesList
         #Verifier que les mouvements ne créer pas d'échec
-        for move in possibleMovesList:
-            predictionBoard=self
-            predictionBoard.movePieces(move,possibleMovesList)
-            if(predictionBoard.echec()!=[]):
-                print(move)
-                print(self.state)
+        #for move in possibleMovesList:
+         #   predictionBoard=self
+          #  predictionBoard.movePieces(move,possibleMovesList)
+          #  if(predictionBoard.echec()!=[]):
+           #     print(move)
+             #   print(self.state)
                 #possibleMovesList.remove(move)
         return possibleMovesList
     def movePieces(self,moves,movesList):#moves is the a tuple from movesList
@@ -143,6 +143,22 @@ class ChessBoard():
             else:
                 self.blackPiecesList.remove(movedPiece)
         self.board[moves[2].y][moves[2].x]=ChessPieces.Cases(moves[2].y,moves[2].x)
+        listOfPromotion=[ChessPieces.Queen,ChessPieces.Bishop,ChessPieces.Rook,ChessPieces.Knight]
+        promotionResponse=0
+        if(moves[2].y==0 and moves[2].color=="White" and type(moves[2])==ChessPieces.Pawn):
+            self.whitePiecesList.remove(moves[2])
+            print("Choose a promotion :{}",[str(i) for i in listOfPromotion])
+            promotionResponse=int(input("Choose a number:"))
+            newPiece=listOfPromotion[promotionResponse](self,moves[2].x,moves[2].y,"White")
+            self.whitePiecesList.append(newPiece)
+            self.board[moves[2].y][moves[2].x]=newPiece
+        elif(moves[2].y==7 and moves[2].color=="Black" and type(moves[2])==ChessPieces.Pawn):
+            self.blackPiecesList.remove(moves[2])
+            print("Choose a promotion :{}",[str(i) for i in listOfPromotion])
+            promotionResponse=int(input("Choose a number:"))
+            newPiece=listOfPromotion[promotionResponse](self,moves[2].x,moves[2].y,"Black")
+            self.whitePiecesList.append(newPiece)
+            self.board[moves[2].y][moves[2].x]=newPiece
         #if(moves[1]<0):
          #   print(moves)
         moves[2].move(moves[0],moves[1])
