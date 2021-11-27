@@ -121,6 +121,16 @@ class ChessBoard():
     def movePieces(self,moves):#moves is the a tuple from movesList
         self.board[moves[2].y][moves[2].x]=ChessPieces.Cases(moves[2].y,moves[2].x)
         moves[2].move(moves[0],moves[1])
+        movedPiece=self.board[moves[1]][moves[0]]
+        if(type(movedPiece)!=ChessPieces.Cases):
+            print(movedPiece)
+            print(moves)
+            print(moves[2])
+            if(self.state==1):
+                self.whitePiecesList.remove(movedPiece)
+            else:
+                self.blackPiecesList.remove(movedPiece)
+            
         self.board[moves[1]][moves[0]]=moves[2]
     def terminal_test(self):
         boardMoves=self.boardPossibleMove()
@@ -136,8 +146,8 @@ class ChessBoard():
             self.showBoard()
             movesList=self.boardPossibleMove()
             movesListStr=[(i[0],i[1],str(i[2])) for i in movesList]
-            chooseMove=int(input("Which move do you chose ?"))
-            #chooseMove=0
+            #chooseMove=int(input("Which move do you chose ?"))
+            chooseMove=0
             if(self.state==1):##White have to play
                 self.movePieces(movesList[chooseMove])
             elif(self.state==-1):##Black have to play
