@@ -77,7 +77,7 @@ class ChessBoard():
         if(attackerList!=[]):
             kingPosition=(-1,-1)
             for piece in piecesList:
-                if(piece==ChessPieces.King):
+                if(type(piece)==ChessPieces.King):
                     kingPosition=(piece.x,piece.y)
                     break
             #add only the moves that defend the king
@@ -107,7 +107,7 @@ class ChessBoard():
                     
                     for i,j in zip(range(kingPosition[0]+1,attacker.x,horizontalAdvance),
                                     range(kingPosition[1]+1,attacker.y,verticalAdvance)):
-                        if(self.moveChecker(i,j,diagonalDangerZone)):
+                        if(piecesList[0].moveChecker(i,j,diagonalDangerZone)):
                             break
                     for move in movesList:
                         for dangerMove in diagonalDangerZone:
