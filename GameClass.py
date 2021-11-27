@@ -47,12 +47,12 @@ class ChessBoard():
         attackingPiecesList=[]
         piecesList=[]
         movesList=[]
-        if(self.state==-1):#Black
+        if(self.state==-1):#if black play check white move
             piecesList=self.blackPiecesList
-            movesList=self.theoryPossibleMove("Black")
+            movesList.extend(self.theoryPossibleMove("White"))
         else:
             piecesList=self.whitePiecesList
-            movesList=self.theoryPossibleMove("White")
+            movesList.extend(self.theoryPossibleMove("Black"))
         for piece in piecesList:
             if(piece.__class__.__name__=="King"):
                 kingPosition=(piece.x,piece.y)
@@ -150,6 +150,7 @@ class ChessBoard():
             movesList=self.boardPossibleMove()
             movesListStr=[(i[0],i[1],str(i[2])) for i in movesList]
             print(movesListStr)
+            print(len(movesListStr))
             chooseMove=int(input("Which move do you chose ?"))
             #chooseMove=0
             if(self.state==1):##White have to play

@@ -99,11 +99,13 @@ class King(ChessPiece):
         #Removes cases that are attacked
         opposingMovesList=[]
         piecesList=[]
-        if(self.chessBoard.state==1):
+        if(self.chessBoard.state==-1):
             piecesList.extend(self.chessBoard.whitePiecesList)
         else:
             piecesList.extend(self.chessBoard.blackPiecesList)
-        piecesList.remove(self)
+        for piece in piecesList:
+            if(type(piece)==King):
+                piecesList.remove(piece)
         for piece in piecesList:
             opposingMovesList.extend(piece.possibleMove())
         movesList2=[]
@@ -244,17 +246,16 @@ class Knight(ChessPiece):
         return super().move(positionX, positionY)
     def possibleMove(self):
         movesList=[]
-        theoryMoves=[
-            (self.x+1,self.y+2),
-            (self.x-1,self.y+2),
-            (self.x+2,self.y+1),
-            (self.x+2,self.y-1)
-        ]
-        #theoryMoves=[i for i in theoryMoves if i[0]>=0 and i[0]<8 and i[1]>=0 and i[1]<8]
-        print(theoryMoves)
+        theoryMoves=[]
+        adjustList=[1,-1]
+        adjustList2=[2,-2]
+        for i in adjustList:
+            for j in adjustList2:
+                theoryMoves.append((self.x+i,self.y+j))
+                theoryMoves.append((self.x+j,self.y+i))
         for move in theoryMoves:
             self.moveChecker(move[0],move[1],movesList)
-        print(movesList)
+        
         return movesList
     def __str__(self):
         return super().__str__()
