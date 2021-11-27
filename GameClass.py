@@ -1,4 +1,5 @@
 import ChessPieces
+import copy
 class ChessBoard(): 
     def __init__(self):
         self.state=1# -1 Black : 1 White -> state white have to play
@@ -93,7 +94,6 @@ class ChessBoard():
                 else:
                     verticalAdvance=-1
                 if(kingPosition[0]==attacker.x):#attacker attack on line vertical
-                    verticalDangerZone=[]
                     for move in movesList:
                         if(move[0]==attacker.x and (move[0]-attacker.x)*horizontalAdvance<=0):
                             possibleMovesList.append(move)
@@ -107,14 +107,22 @@ class ChessBoard():
                     
                     for i,j in zip(range(kingPosition[0]+1,attacker.x,horizontalAdvance),
                                     range(kingPosition[1]+1,attacker.y,verticalAdvance)):
+
                         if(piecesList[0].moveChecker(i,j,diagonalDangerZone)):
                             break
                     for move in movesList:
                         for dangerMove in diagonalDangerZone:
-                            if(move[0]==dangerMove[0 and move[1]==dangerMove[1]]):
+                            if(move[0]==dangerMove[0] and move[1]==dangerMove[1]):
                                 possibleMovesList.append(move)
         else:
-            return movesList
+            possibleMovesList=movesList
+        #Verifier que les mouvements ne créer pas d'échec
+        #for move in possibleMovesList:
+        #    predictionBoard=copy.deepcopy(self)
+        #    predictionBoard.movePieces(move)
+        #    if(predictionBoard.echec()!=[]):
+          #      print(move)
+           #     possibleMovesList.remove(move)
         return possibleMovesList
     def movePieces(self,moves):#moves is the a tuple from movesList
         
