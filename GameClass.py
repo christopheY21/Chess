@@ -38,8 +38,6 @@ class ChessBoard():
         else:
 
             for piece in self.whitePiecesList:
-                print(str(piece))
-                print(len(piece.possibleMove()))
                 movesList.extend(piece.possibleMove())
         
         return movesList
@@ -56,7 +54,7 @@ class ChessBoard():
             piecesList=self.whitePiecesList
             movesList=self.theoryPossibleMove("White")
         for piece in piecesList:
-            if(piece==ChessPieces.King):
+            if(piece.__class__.__name__=="King"):
                 kingPosition=(piece.x,piece.y)
                 break
         for moves in movesList:
@@ -119,18 +117,23 @@ class ChessBoard():
             return movesList
         return possibleMovesList
     def movePieces(self,moves):#moves is the a tuple from movesList
-        self.board[moves[2].y][moves[2].x]=ChessPieces.Cases(moves[2].y,moves[2].x)
-        moves[2].move(moves[0],moves[1])
+        
+        
         movedPiece=self.board[moves[1]][moves[0]]
         if(type(movedPiece)!=ChessPieces.Cases):
-            print(movedPiece)
-            print(moves)
-            print(moves[2])
-            if(self.state==1):
+            #print(movedPiece)
+            #print("x:{} , y:{} piece:{}".format(movedPiece.x,movedPiece.y,movedPiece))
+            #print(moves)
+            #print("x:{} , y:{} piece:{}".format(moves[2].x,moves[2].y,moves[2]))
+            #print(movedPiece in self.whitePiecesList)
+            if(self.state==-1):
                 self.whitePiecesList.remove(movedPiece)
             else:
                 self.blackPiecesList.remove(movedPiece)
-            
+        self.board[moves[2].y][moves[2].x]=ChessPieces.Cases(moves[2].y,moves[2].x)
+        #if(moves[1]<0):
+         #   print(moves)
+        moves[2].move(moves[0],moves[1])
         self.board[moves[1]][moves[0]]=moves[2]
     def terminal_test(self):
         boardMoves=self.boardPossibleMove()
@@ -152,7 +155,7 @@ class ChessBoard():
                 self.movePieces(movesList[chooseMove])
             elif(self.state==-1):##Black have to play
                 self.movePieces(movesList[chooseMove])
-            self.state*=-1
+            self.state=self.state*(-1)
             self.turn+=1
     def showBoard(self):
         print([str(i) for i in range(8)])

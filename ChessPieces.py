@@ -13,6 +13,8 @@ class ChessPiece():
         self.y=positionY
     def moveChecker(self,x,y,movesList):
         stopMove=False
+        if(x>7 or x<0 or y<0 or y>7):
+            return True
         #3 cas (1): Cases vides / (2) :pion allié / (3):pion ennemi
         if(type(self.chessBoard.board[y][x])==Cases):
             movesList.append((x,y,self))
@@ -27,6 +29,8 @@ class ChessPiece():
             return self.unicodeCharBlack
         else:
             return self.unicodeCharWhite
+    def __eq__(self, other):
+        return self.x==other.x and self.y==other.y and self.__class__.__name__==other.__class__.__name__
 class Cases():
     unicodeCharBlack="\u25A0"
     unicodeCharWhite="\u25A1"
@@ -71,6 +75,8 @@ class Rook(ChessPiece):
         return movesList
     def __str__(self):
         return super().__str__()
+    def __eq__(self, other):
+        return super().__eq__(other)
 class King(ChessPiece):
     unicodeCharBlack="\u265A"
     unicodeCharWhite="\u2654"
@@ -100,13 +106,18 @@ class King(ChessPiece):
         piecesList.remove(self)
         for piece in piecesList:
             opposingMovesList.extend(piece.possibleMove())
+        movesList2=[]
+        movesList2.extend(movesList)
         for kingMove in movesList:
             for attackerMove in opposingMovesList:
                 if((kingMove[0],kingMove[1])==(attackerMove[0],attackerMove[1])):
-                    movesList.remove(kingMove)
-        return movesList
+                    movesList2.remove(kingMove)
+                    break
+        return movesList2
     def __str__(self):
         return super().__str__()
+    def __eq__(self, other):
+        return super().__eq__(other)
 class Queen(ChessPiece):
     unicodeCharBlack="\u265A"
     unicodeCharWhite="\u2655"
@@ -153,6 +164,8 @@ class Queen(ChessPiece):
         
     def __str__(self):
         return super().__str__()
+    def __eq__(self, other):
+        return super().__eq__(other)
 class Bishop(ChessPiece):
     unicodeCharBlack="\u265D"
     unicodeCharWhite="\u2657"
@@ -182,6 +195,8 @@ class Bishop(ChessPiece):
         return movesList
     def __str__(self):
         return super().__str__()
+    def __eq__(self, other):
+        return super().__eq__(other)
 class Pawn(ChessPiece):
     unicodeCharBlack="\u265F"
     unicodeCharWhite="\u2659"
@@ -189,6 +204,7 @@ class Pawn(ChessPiece):
         super().__init__(chessBoard, positionY, positionX, color)
         self.moved=False
     def move(self, positionX, positionY):
+        self.moved=True
         return super().move(positionX, positionY)
     def possibleMove(self):
         movesList=[]
@@ -206,13 +222,19 @@ class Pawn(ChessPiece):
             end=self.x
         for i in range(start,end+1):
             for j in range(1,numberMoveCase+1):
-                self.moveChecker(i,self.y+(j*avance),movesList)
-                if(self.x!=i and type(self.chessBoard.board[self.y+(j*avance)][i])==Cases):
-                    movesList.remove((i,self.y+(j*avance),self))
-
+                
+                if(self.x!=i and type(self.chessBoard.board[self.y+(j*avance)][i])==Cases):#Ne pas inclure les moves diagonales sans ennemis
+                    break
+                elif(self.x==i and type(self.chessBoard.board[self.y+(j*avance)][i])!=Cases):
+                    break
+                else:
+                    self.moveChecker(i,(self.y+(j*avance)),movesList)
+       
         return movesList
     def __str__(self):
         return super().__str__()
+    def __eq__(self, other):
+        return super().__eq__(other)
 class Knight(ChessPiece):
     unicodeCharBlack="\u265E"
     unicodeCharWhite="\u2658"
@@ -234,3 +256,5 @@ class Knight(ChessPiece):
         return movesList
     def __str__(self):
         return super().__str__()
+    def __eq__(self, other):
+        return super().__eq__(other)
