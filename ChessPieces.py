@@ -34,9 +34,10 @@ class ChessPiece():
 class Cases():
     unicodeCharBlack="\u25A0"
     unicodeCharWhite="\u25A1"
-    def __init__(self,positionY,positionX):
+    def __init__(self,positionY,positionX,passantCase=False):
         self.x=positionX
         self.y=positionY
+        self.passantCase=passantCase
         if((positionY+positionX)%2==0):
             self.color="White"
         else:
@@ -51,8 +52,10 @@ class Rook(ChessPiece):
     unicodeCharWhite="\u2656"
     def __init__(self, chessBoard, positionY, positionX, color) -> None:
         super().__init__(chessBoard, positionY, positionX, color)
+        self.moved=False
         
     def move(self, positionX, positionY):
+        self.moved=True
         return super().move(positionX, positionY)
     def possibleMove(self):
         movesList=[]
@@ -82,8 +85,9 @@ class King(ChessPiece):
     unicodeCharWhite="\u2654"
     def __init__(self, chessBoard, positionY, positionX, color) -> None:
         super().__init__(chessBoard, positionY, positionX, color)
+        self.moved=False
     def move(self, positionX, positionY):
-        
+        self.moved=True
         return super().move(positionX, positionY)
     def possibleMove(self):
         movesList=[]
@@ -112,9 +116,44 @@ class King(ChessPiece):
         movesList2.extend(movesList)
         for kingMove in movesList:
             for attackerMove in opposingMovesList:
-                if((kingMove[0],kingMove[1])==(attackerMove[0],attackerMove[1])):
+                if(kingMove[0]==attackerMove[0] and kingMove[1]==attackerMove[1]):
                     movesList2.remove(kingMove)
                     break
+
+        #Castling
+        if(not self.moved):
+            #Check small castling
+            smallVide=True
+            controlled=False
+            for i in range(self.x+1,7):
+                if(type(self.chessBoard.board[self.y][i])!=Cases):
+                    smallVide=False
+                    break
+            if(type(self.chessBoard.board[self.y][7])==Rook and not(self.chessBoard.board[self.y][7].moved) and smallVide):
+                #Verifier que les ennemis de controle pas la zone
+                for i in range(self.x,7):
+                    for attackerMove in opposingMovesList:
+                        if(attackerMove[0]==i and attackerMove[1]==self.y):
+                            controlled=True
+                            break
+                if(not controlled):
+                    movesList2.append((self.x+2,self.y,self))
+            #Check big castling
+            bigVide=True
+            controlled=False
+            for i in range(self.x+1,0,-1):
+                if(type(self.chessBoard.board[self.y][i])!=Cases):
+                    bigVide=False
+                    break
+            if(type(self.chessBoard.board[self.y][0])==Rook and not(self.chessBoard.board[self.y][0].moved) and bigVide):
+                #Verifier que les ennemis de controle pas la zone
+                for i in range(self.x,0,-1):
+                    for attackerMove in opposingMovesList:
+                        if(attackerMove[0]==i and attackerMove[1]==self.y):
+                            controlled=True
+                            break
+                if(not controlled):
+                    movesList2.append((self.x-2,self.y,self))
         return movesList2
     def __str__(self):
         return super().__str__()
@@ -205,8 +244,11 @@ class Pawn(ChessPiece):
     def __init__(self, chessBoard, positionY, positionX, color) -> None:
         super().__init__(chessBoard, positionY, positionX, color)
         self.moved=False
+        self.passant=[False,1]
     def move(self, positionX, positionY):
         self.moved=True
+        if(abs(self.y-positionY)==2):
+            self.passant=[True,self.chessBoard.turn]
         return super().move(positionX, positionY)
     def possibleMove(self):
         movesList=[]
@@ -222,16 +264,27 @@ class Pawn(ChessPiece):
             start=self.x
         if(end>8-1):
             end=self.x
+        if(self.y==7 or self.y==0):
+            numberMoveCase=0
         for i in range(start,end+1):
             for j in range(1,numberMoveCase+1):
-                
                 if(self.x!=i and type(self.chessBoard.board[self.y+(j*avance)][i])==Cases):#Ne pas inclure les moves diagonales sans ennemis
                     break
                 elif(self.x==i and type(self.chessBoard.board[self.y+(j*avance)][i])!=Cases):
                     break
                 else:
                     self.moveChecker(i,(self.y+(j*avance)),movesList)
-       
+       #Coup en passant
+        if(self.x-1>=0):
+            leftPawn=self.chessBoard.board[self.y][self.x-1]
+            if(type(leftPawn)==Pawn):
+                if(leftPawn.passant[0] and leftPawn.passant[1]-1==self.chessBoard.turn):
+                    pass
+        if(self.x+1<8):
+            rightPawn=self.chessBoard.board[self.y][self.x+1]
+            if(type(rightPawn)==Pawn):
+                if(rightPawn.passant[0] and rightPawn.passant[1]-1==self.chessBoard.turn):
+                    pass
         return movesList
     def __str__(self):
         return super().__str__()

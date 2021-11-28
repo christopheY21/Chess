@@ -63,16 +63,12 @@ class ChessBoard():
             if(kingPosition==(moves[0],moves[1])):
                     attackingPiecesList.append(moves[2])
         return attackingPiecesList
-    def boardPossibleMove(self):
-        if(self.state==-1):
-            colorPlay="Black"
-        else:
-            colorPlay="White"
+    def boardPossibleMoves(self,colorPlay):
         movesList=self.theoryPossibleMove(colorPlay)
         possibleMovesList=[]
         attackerList=self.echec()
         piecesList=[]
-        if(self.state==1):#White have to play
+        if(colorPlay=="White"):#White have to play
             piecesList=self.whitePiecesList
         else:
             piecesList=self.blackPiecesList
@@ -83,6 +79,11 @@ class ChessBoard():
                     kingPosition=(piece.x,piece.y)
                     break
             #add only the moves that defend the king
+           
+            for move in movesList:
+                for attacker in attackerList:
+                    if(move[0]==attacker.x and move[1]==attacker.y):
+                        possibleMovesList.append(move)
             for attacker in attackerList:
                 horizontalAdvance=0
                 verticalAdvance=0
@@ -96,23 +97,23 @@ class ChessBoard():
                     verticalAdvance=-1
                 if(kingPosition[0]==attacker.x):#attacker attack on line vertical
                     for move in movesList:
-                        if(move[0]==attacker.x and (move[0]-attacker.x)*horizontalAdvance<=0):
+                        if(move[0]==attacker.x and (move[0]-attacker.x)*horizontalAdvance<0):
                             possibleMovesList.append(move)
                 elif(kingPosition[1]==attacker.y):#attacker attack on line horizontal
                     for move in movesList:
-                        if(move[1]==attacker.y and (move[1]-attacker.y)*verticalAdvance<=0):
+                        if(move[1]==attacker.y and (move[1]-attacker.y)*verticalAdvance<0):
                             possibleMovesList.append(move)
             
                 else:#attack on diagonal
-                    diagonalDangerZone=[]
-                    
+                    DangerZone=[]
+                    #Diagonal
                     for i,j in zip(range(kingPosition[0]+1,attacker.x,horizontalAdvance),
                                     range(kingPosition[1]+1,attacker.y,verticalAdvance)):
 
-                        if(piecesList[0].moveChecker(i,j,diagonalDangerZone)):
+                        if(piecesList[0].moveChecker(i,j,DangerZone)):
                             break
                     for move in movesList:
-                        for dangerMove in diagonalDangerZone:
+                        for dangerMove in DangerZone:
                             if(move[0]==dangerMove[0] and move[1]==dangerMove[1]):
                                 possibleMovesList.append(move)
         else:
@@ -128,21 +129,37 @@ class ChessBoard():
         return possibleMovesList
     def movePieces(self,moves,movesList):#moves is the a tuple from movesList
         endingMove=moves
+        startingMove=(moves[2].x,moves[2].y,moves[2])
         checkingMove=False
         numberOfMoves=0
         eatingMove=False
+        #Checking unique moves
         for move in movesList:
             if(moves[0]==move[0] and moves[1]==move[1]):
                 numberOfMoves+=1
         uniqueMove=numberOfMoves==1
+
         movedPiece=self.board[moves[1]][moves[0]]
+        #Checking eating move
         if(type(movedPiece)!=ChessPieces.Cases):
             eatingMove=True
             if(self.state==-1):
                 self.whitePiecesList.remove(movedPiece)
             else:
                 self.blackPiecesList.remove(movedPiece)
+        else:
+            if(movedPiece.passantCase):
+                eatingMove=True
+                if(self.state==-1):
+                    passedPiece=self.board[movedPiece.y-1][movedPiece.x]
+                    self.whitePiecesList.remove(passedPiece)
+                else:
+                    passedPiece=self.board[movedPiece.y+1][movedPiece.x]
+                    self.blackPiecesList.remove(passedPiece)
+                self.board[passedPiece.y][passedPiece.x]=ChessPieces.Cases(passedPiece.y,passedPiece.x)
+        #Rendre vide la case de depart
         self.board[moves[2].y][moves[2].x]=ChessPieces.Cases(moves[2].y,moves[2].x)
+        #Promotion move
         listOfPromotion=[ChessPieces.Queen,ChessPieces.Bishop,ChessPieces.Rook,ChessPieces.Knight]
         promotionResponse=0
         if(moves[2].y==0 and moves[2].color=="White" and type(moves[2])==ChessPieces.Pawn):
@@ -159,15 +176,22 @@ class ChessBoard():
             newPiece=listOfPromotion[promotionResponse](self,moves[2].x,moves[2].y,"Black")
             self.whitePiecesList.append(newPiece)
             self.board[moves[2].y][moves[2].x]=newPiece
-        #if(moves[1]<0):
-         #   print(moves)
+        #acting move
         moves[2].move(moves[0],moves[1])
         self.board[moves[1]][moves[0]]=moves[2]
+        if(type(moves[2])==ChessPieces.Pawn):
+            if(moves[2].passant[0]):
+                self.board[moves[2].y][moves[2].x].passantCase=True
+        #Checking moves
         if(self.echec()!=[]):
             checkingMove=True
-        self.history.append((endingMove,uniqueMove,checkingMove,eatingMove))
+        self.history.append((startingMove,endingMove,uniqueMove,checkingMove,eatingMove))
     def terminal_test(self):
-        boardMoves=self.boardPossibleMove()
+        if(self.state==-1):
+            colorPlay="Black"
+        else:
+            colorPlay="White"
+        boardMoves=self.boardPossibleMoves(colorPlay)
         if(boardMoves==[]):
             print("Partie terminé")
             print("Nombres de tours :{}".format(self.turn))
@@ -178,12 +202,16 @@ class ChessBoard():
     def startTheGame(self):
         while(not self.terminal_test()):
             self.showBoard()
-            movesList=self.boardPossibleMove()
+            if(self.state==-1):
+                colorPlay="Black"
+            else:
+                colorPlay="White"
+            movesList=self.boardPossibleMoves(colorPlay)
             movesListStr=[(i[0],i[1],str(i[2])) for i in movesList]
             print(movesListStr)
             print(len(movesListStr))
-            chooseMove=int(input("Which move do you chose ?"))
-            #chooseMove=0
+            #chooseMove=int(input("Which move do you chose ?"))
+            chooseMove=0
             if(self.state==1):##White have to play
                 self.movePieces(movesList[chooseMove],movesList)
             elif(self.state==-1):##Black have to play
