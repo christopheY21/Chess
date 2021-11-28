@@ -131,13 +131,13 @@ class ChessBoard():
         endingMove=moves
         startingMove=(moves[2].x,moves[2].y,moves[2])
         checkingMove=False
-        numberOfMoves=0
+        #numberOfMoves=0
         eatingMove=False
         #Checking unique moves
-        for move in movesList:
-            if(moves[0]==move[0] and moves[1]==move[1]):
-                numberOfMoves+=1
-        uniqueMove=numberOfMoves==1
+        #for move in movesList:
+         #   if(moves[0]==move[0] and moves[1]==move[1]):
+          #      numberOfMoves+=1
+        #uniqueMove=numberOfMoves==1
 
         movedPiece=self.board[moves[1]][moves[0]]
         #Checking eating move
@@ -185,7 +185,7 @@ class ChessBoard():
         #Checking moves
         if(self.echec()!=[]):
             checkingMove=True
-        self.history.append((startingMove,endingMove,uniqueMove,checkingMove,eatingMove))
+        self.history.append((startingMove,endingMove,checkingMove,eatingMove))
     def terminal_test(self):
         if(self.state==-1):
             colorPlay="Black"
@@ -210,15 +210,15 @@ class ChessBoard():
             movesListStr=[(i[0],i[1],str(i[2])) for i in movesList]
             print(movesListStr)
             print(len(movesListStr))
-            #chooseMove=int(input("Which move do you chose ?"))
-            chooseMove=0
+            chooseMove=int(input("Which move do you chose ?"))
+            #chooseMove=0
             if(self.state==1):##White have to play
                 self.movePieces(movesList[chooseMove],movesList)
             elif(self.state==-1):##Black have to play
                 self.movePieces(movesList[chooseMove],movesList)
             self.state=self.state*(-1)
             self.turn+=1
-            #self.writeHistory()
+            self.writeHistory()
     def showBoard(self):
         print([str(i) for i in range(8)])
         i=0
@@ -226,6 +226,8 @@ class ChessBoard():
             print([str(i) for i in rows],end=" ")
             print(i)
             i+=1
+    def loadHistory(self,history):
+        pass
     def writeHistory(self):
         event=""
         site=""
@@ -234,8 +236,18 @@ class ChessBoard():
         white=""
         black=""
         result="*"
+        turn=1
         moveNumber=1
+        algebricNotation={
+            ChessPieces.Bishop.__name__:"B",
+            ChessPieces.Rook.__name__:"R",
+            ChessPieces.Queen.__name__:"Q",
+            ChessPieces.King.__name__:"K",
+            ChessPieces.Knight.__name__:"N",
+            ChessPieces.Pawn.__name__:""
+        }
         with open("history.pgn","w") as historyFile:
+            #HEAD
             historyFile.write("[Event {}]\n".format(event))
             historyFile.write("[Site {}]\n".format(site))
             historyFile.write("[Date {}]\n".format(date))
@@ -243,14 +255,25 @@ class ChessBoard():
             historyFile.write("[White {}]\n".format(white))
             historyFile.write("[Black {}]\n".format(black))
             historyFile.write("[Result {}]\n".format(result))
+            #BODY
             for move in self.history:
+                #move form(startingMove,endingMove,checkingMove,eatingMove)
                 if(moveNumber%2!=0):
-                    historyFile.write("{}. ".format(moveNumber))
-                if(move[2]):#unique move
-                    historyFile.write("{}{} ".format(chr(move[0]+97),move[1]+1))
-                if(move[3]):#Checking move
+                    historyFile.write("{}. ".format(turn))
+                    turn+=1
+                if(move[3]):
+                    if(type(move[1][2])==ChessPieces.Pawn):
+                        historyFile.write("{}x ".format(chr(move[0][0]+97)))
+                    else:
+                        historyFile.write("{}x".format(algebricNotation[move[1][2].__class__.__name__]))
+                    historyFile.write("{}{} ".format(chr(move[1][0]+97),move[1][1]+1))
+                else:
+                    historyFile.write("{}".format(algebricNotation[move[1][2].__class__.__name__]))
+                    historyFile.write("{}{} ".format(chr(move[1][0]+97),move[1][1]+1))
+                if(move[2]):#Checking move
                     historyFile.write("+")
                 moveNumber+=1
+                
                 
         print(self.history)
 chess=ChessBoard()
