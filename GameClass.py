@@ -54,6 +54,7 @@ class ChessBoard():
                 #TRADUCTION PGN TO CLASS FORMAT
 
                 for move in movesList:
+                    print(move)
                     if(self.state==-1):#Black play
                         colorPlay="Black"
                     else:
@@ -65,6 +66,7 @@ class ChessBoard():
         except IOError as e:
             print(e)
     def pgnToMove(self,move,boardMoves):
+
         algebricNotation={
             "B":ChessPieces.Bishop,
             "R":ChessPieces.Rook,
@@ -91,18 +93,16 @@ class ChessBoard():
         for moveBoard in boardMoves:
             if(moveBoard[0]==moveX and moveBoard[1]==moveY and type(moveBoard[2])==pieceType):
                 return moveBoard
+        self.showBoard()
         return None
     def theoryPossibleMove(self,color):
         movesList=[]
         if(color=="Black"):
             for piece in self.blackPiecesList:
-
                 movesList.extend(piece.possibleMove())
         else:
-
             for piece in self.whitePiecesList:
                 movesList.extend(piece.possibleMove())
-        
         return movesList
     def echec(self):
        # ECHEC
@@ -178,7 +178,7 @@ class ChessBoard():
                             if(move[0]==dangerMove[0] and move[1]==dangerMove[1]):
                                 possibleMovesList.append(move)
         else:
-            possibleMovesList=movesList
+            possibleMovesList.extend(movesList)
         #Verifier que les mouvements ne créer pas d'échec
         #for move in possibleMovesList:
          #   predictionBoard=self
@@ -200,7 +200,6 @@ class ChessBoard():
          #   if(moves[0]==move[0] and moves[1]==move[1]):
           #      numberOfMoves+=1
         #uniqueMove=numberOfMoves==1
-
         movedPiece=self.board[moves[1]][moves[0]]
         #Checking eating move
         if(type(movedPiece)!=ChessPieces.Cases):
@@ -210,13 +209,13 @@ class ChessBoard():
             else:
                 self.blackPiecesList.remove(movedPiece)
         else:
-            if(movedPiece.passantCase):
+            if(movedPiece.passantCase[0] and (movedPiece.passantCase[1]+1)==self.turn):
                 eatingMove=True
                 if(self.state==-1):
-                    passedPiece=self.board[movedPiece.y-1][movedPiece.x]
+                    passedPiece=self.board[moves[1]-1][moves[0]]
                     self.whitePiecesList.remove(passedPiece)
                 else:
-                    passedPiece=self.board[movedPiece.y+1][movedPiece.x]
+                    passedPiece=self.board[moves[1]+1][moves[0]]
                     self.blackPiecesList.remove(passedPiece)
                 self.board[passedPiece.y][passedPiece.x]=ChessPieces.Cases(passedPiece.y,passedPiece.x)
         #Rendre vide la case de depart
@@ -224,34 +223,60 @@ class ChessBoard():
         #Promotion move
         listOfPromotion=[ChessPieces.Queen,ChessPieces.Bishop,ChessPieces.Rook,ChessPieces.Knight]
         promotionResponse=0
-        if(moves[2].y==0 and moves[2].color=="White" and type(moves[2])==ChessPieces.Pawn):
+        if(moves[1]==0 and moves[2].color=="White" and type(moves[2])==ChessPieces.Pawn):
+            print("PROMOTION!")
             self.whitePiecesList.remove(moves[2])
-            print("Choose a promotion :{}",[str(i) for i in listOfPromotion])
+            print("Choose a promotion :{}".format([str(i.__name__) for i in listOfPromotion]))
             promotionResponse=int(input("Choose a number:"))
-            newPiece=listOfPromotion[promotionResponse](self,moves[2].x,moves[2].y,"White")
+            newPiece=listOfPromotion[promotionResponse](self,moves[1],moves[0],"White")
             self.whitePiecesList.append(newPiece)
-            self.board[moves[2].y][moves[2].x]=newPiece
+            self.board[moves[1]][moves[0]]=newPiece
+            print("Vous avez choisi {}.".format(str(newPiece)))
             promotedPawn=(True,listOfPromotion[promotionResponse])
-        elif(moves[2].y==7 and moves[2].color=="Black" and type(moves[2])==ChessPieces.Pawn):
+        elif(moves[1]==7 and moves[2].color=="Black" and type(moves[2])==ChessPieces.Pawn):
             self.blackPiecesList.remove(moves[2])
-            print("Choose a promotion :{}",[str(i) for i in listOfPromotion])
+            print("Choose a promotion :{}".format([str(i.__name__) for i in listOfPromotion]))
             promotionResponse=int(input("Choose a number:"))
-            newPiece=listOfPromotion[promotionResponse](self,moves[2].x,moves[2].y,"Black")
+            newPiece=listOfPromotion[promotionResponse](self,moves[1],moves[0],"Black")
             self.whitePiecesList.append(newPiece)
-            self.board[moves[2].y][moves[2].x]=newPiece
+            self.board[moves[1]][moves[0]]=newPiece
             promotedPawn=(True,listOfPromotion[promotionResponse])
+            print("Vous avez choisi {}.".format(str(newPiece)))
+        #Rook
+        elif(type(moves[2])==ChessPieces.King and abs(moves[0]-moves[2].x)==2):
+            moves[2].move(moves[0],moves[1])
+            self.board[moves[1]][moves[0]]=moves[2]
+            rookY=0
+            if(moves[2].color=="Black"):
+                rookY=0
+            else:
+                rookY=7
+            if(moves[1]>4):#small castle
+
+                self.board[rookY][5]=self.board[rookY][7]
+                self.board[rookY][5].x=5
+                self.board[rookY][5].y=rookY
+                self.board[rookY][7]=ChessPieces.Cases(7,rookY)
+            else:#big castle
+                self.board[rookY][3]=self.board[rookY][0]
+                self.board[rookY][3].x=3
+                self.board[rookY][3].y=rookY
+                self.board[rookY][0]=ChessPieces.Cases(0,rookY)
         #acting move
-        moves[2].move(moves[0],moves[1])
-        self.board[moves[1]][moves[0]]=moves[2]
-        if(type(moves[2])==ChessPieces.Pawn):
-            if(moves[2].passant[0]):
-                self.board[moves[2].y][moves[2].x].passantCase=True
+        else:
+            moves[2].move(moves[0],moves[1])
+            self.board[moves[1]][moves[0]]=moves[2]
+            if(type(moves[2])==ChessPieces.Pawn):
+                if(moves[2].passant[0]):
+                    self.board[moves[2].y+(self.state)][moves[2].x].passantCase=[True,self.turn]
         #Checking moves
-        if(self.echec()!=[]):
-            checkingMove=True
-        self.history.append((startingMove,endingMove,checkingMove,eatingMove,promotedPawn))
         self.state=self.state*(-1)
         self.turn+=1
+        if(self.echec()!=[]):
+            checkingMove=True
+
+        self.history.append((startingMove,endingMove,checkingMove,eatingMove,promotedPawn))
+        
     def terminal_test(self):
         if(self.state==-1):
             colorPlay="Black"

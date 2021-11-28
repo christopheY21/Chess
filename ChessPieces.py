@@ -34,7 +34,7 @@ class ChessPiece():
 class Cases():
     unicodeCharBlack="\u25A0"
     unicodeCharWhite="\u25A1"
-    def __init__(self,positionY,positionX,passantCase=False):
+    def __init__(self,positionY,positionX,passantCase=[False,1]):
         self.x=positionX
         self.y=positionY
         self.passantCase=passantCase
@@ -141,7 +141,8 @@ class King(ChessPiece):
             #Check big castling
             bigVide=True
             controlled=False
-            for i in range(self.x+1,0,-1):
+            for i in range(self.x-1,0,-1):
+                print(i)
                 if(type(self.chessBoard.board[self.y][i])!=Cases):
                     bigVide=False
                     break
@@ -154,13 +155,14 @@ class King(ChessPiece):
                             break
                 if(not controlled):
                     movesList2.append((self.x-2,self.y,self))
+            
         return movesList2
     def __str__(self):
         return super().__str__()
     def __eq__(self, other):
         return super().__eq__(other)
 class Queen(ChessPiece):
-    unicodeCharBlack="\u265A"
+    unicodeCharBlack="\u265B"
     unicodeCharWhite="\u2655"
     def __init__(self, chessBoard, positionY, positionX, color) -> None:
         super().__init__(chessBoard, positionY, positionX, color)
@@ -249,6 +251,8 @@ class Pawn(ChessPiece):
         self.moved=True
         if(abs(self.y-positionY)==2):
             self.passant=[True,self.chessBoard.turn]
+        else:
+            self.passant=[False,self.chessBoard.turn]
         return super().move(positionX, positionY)
     def possibleMove(self):
         movesList=[]
@@ -278,13 +282,13 @@ class Pawn(ChessPiece):
         if(self.x-1>=0):
             leftPawn=self.chessBoard.board[self.y][self.x-1]
             if(type(leftPawn)==Pawn):
-                if(leftPawn.passant[0] and leftPawn.passant[1]-1==self.chessBoard.turn):
-                    pass
+                if(leftPawn.passant[0] and (leftPawn.passant[1]+1)==self.chessBoard.turn):
+                    movesList.append((self.x-1,self.y+avance,self))
         if(self.x+1<8):
             rightPawn=self.chessBoard.board[self.y][self.x+1]
             if(type(rightPawn)==Pawn):
-                if(rightPawn.passant[0] and rightPawn.passant[1]-1==self.chessBoard.turn):
-                    pass
+                if(rightPawn.passant[0] and (rightPawn.passant[1]+1)==self.chessBoard.turn):
+                    movesList.append((self.x+1,self.y+avance,self))
         return movesList
     def __str__(self):
         return super().__str__()
