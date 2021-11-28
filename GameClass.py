@@ -1,5 +1,6 @@
 import ChessPieces
 import time
+import datetime
 class ChessBoard(): 
     def __init__(self,loadpgnFile="noLoad",boardConfig=False,unicodeText=True):
         self.state=1# -1 Black : 1 White -> state white have to play
@@ -300,15 +301,22 @@ class ChessBoard():
             print(i)
             i+=1
     def startTheGame(self):
+        whiteTime=0
+        blackTime=0
         while(not self.terminal_test()):
             
             if(self.state==-1):
-                
+                blackStart=time.time()
+
                 colorPlay="Black"
+                print("Le temps de jeu des noirs est :{}".format(datetime.timedelta(seconds=blackTime)))
                 print("C'est au tour des Noirs de jouer!")
             else:
+            
+                whiteStart=time.time()
                 
                 colorPlay="White"
+                print("Le temps de jeu des blancs est :{}".format(datetime.timedelta(seconds=whiteTime)))
                 print("C'est au tour des blanc de jouer!")
             self.showBoard()
             movesList=self.boardPossibleMoves(colorPlay)
@@ -338,11 +346,12 @@ class ChessBoard():
                     continue
             if(self.state==1):##White have to play
                 self.movePieces(movesList[int(chooseMove)],movesList)
+                whiteTime+=time.time()-whiteStart
             elif(self.state==-1):##Black have to play
                 self.movePieces(movesList[int(chooseMove)],movesList)
+                blackTime+=time.time()-blackStart
             
-            
-            self.writeHistory()
+            #self.writeHistory()
     def showBoard(self):
         unicodeToText={
             ChessPieces.Bishop.__name__:"B",
@@ -418,10 +427,10 @@ class ChessBoard():
                         historyFile.write("{}x ".format(chr(move[0][0]+97)))
                     else:
                         historyFile.write("{}x".format(algebricNotation[move[1][2].__class__.__name__]))
-                    historyFile.write("{}{}".format(chr(move[1][0]+97),move[1][1]+1))
+                    historyFile.write("{}{}".format(chr(move[1][0]+97),move[1][1]*(-1)+8))
                 else:
                     historyFile.write("{}".format(algebricNotation[move[1][2].__class__.__name__]))
-                    historyFile.write("{}{}".format(chr(move[1][0]+97),move[1][1]+1))
+                    historyFile.write("{}{}".format(chr(move[1][0]+97),move[1][1]*(-1)+8))
                 if(move[4][0]):#PROMOTING PAWN
                     historyFile.write("={}".format(algebricNotation[move[4].__name__]))
                 if(move[2]):#Checking move
