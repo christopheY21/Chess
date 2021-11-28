@@ -1,5 +1,5 @@
 import ChessPieces
-import copy
+import time
 class ChessBoard(): 
     def __init__(self,loadpgnFile="noLoad",boardConfig=False,unicodeText=True):
         self.state=1# -1 Black : 1 White -> state white have to play
@@ -8,6 +8,7 @@ class ChessBoard():
         self.blackPiecesList=[]
         self.whitePiecesList=[]
         self.history=[]
+        self.result=0
         self.unicodeText=unicodeText
         if(not boardConfig):
         #Filling the board
@@ -37,7 +38,7 @@ class ChessBoard():
             self.boardConfiguration()
         if(loadpgnFile[-4:]==".pgn"):
             self.loadPgnGame(loadpgnFile)
-        self.showBoard()
+        #self.showBoard()
 
     def loadPgnGame(self,loadpgnFile):
         try:
@@ -48,7 +49,7 @@ class ChessBoard():
                 
                 for i in range(0,len(movesList),2):
                     movesList[i]=movesList[i].split(".")[1]
-                print(movesList)
+                #print(movesList)
                 #TRADUCTION PGN TO CLASS FORMAT
 
                 for move in movesList:
@@ -63,7 +64,6 @@ class ChessBoard():
         except IOError as e:
             print(e)
     def pgnToMove(self,move,boardMoves):
-        self.showBoard()
         algebricNotation={
             "B":ChessPieces.Bishop,
             "R":ChessPieces.Rook,
@@ -261,6 +261,7 @@ class ChessBoard():
             print("Partie terminé")
             print("Nombres de tours :{}".format(self.turn))
             print("Victoire de {}".format(self.state*(-1)))
+            self.result=self.state*(-1)
             print(self.echec()[0].color)
             return True
         return False
@@ -292,24 +293,53 @@ class ChessBoard():
                 self.whitePiecesList.append(self.board[pieceY][pieceX])
             self.showBoard()
             reponse=input("Entre 'q' pour quittez / c pour continuez:")
-
+    def printMovesList(self,movesList):
+        i=0
+        for move in movesList:
+            print((move[0],move[1],str(move[2])), end=" ")
+            print(i)
+            i+=1
     def startTheGame(self):
         while(not self.terminal_test()):
-            self.showBoard()
+            
             if(self.state==-1):
+                
                 colorPlay="Black"
+                print("C'est au tour des Noirs de jouer!")
             else:
+                
                 colorPlay="White"
+                print("C'est au tour des blanc de jouer!")
+            self.showBoard()
             movesList=self.boardPossibleMoves(colorPlay)
-            movesListStr=[(i[0],i[1],str(i[2])) for i in movesList]
-            print(movesListStr)
-            print(len(movesListStr))
-            chooseMove=int(input("Which move do you chose ?"))
+            self.printMovesList(movesList)
+            print("You can resign if you input 'resign' you can propose a draw with 'draw':")
+            chooseMove=input("Which move do you chose ?:")
             #chooseMove=0
+            if(chooseMove=="resign"):
+                if(self.state==-1):
+                    print("Black resign")
+                else:
+                    print("White resign")
+                self.result=self.state*(-1)
+                break
+            elif(chooseMove=="draw"):
+                if(self.state==-1):
+                    print("Black want to draw do you want too?")
+                else:
+                    print("White want to draw do you want too?")
+                draw=input("you can reply with  y/n:")
+                if(draw=="y"):
+                    print("it's a draw !")
+                    self.result=1/2
+                    break
+                else:
+                    print("Keep playing the draw is refused")
+                    continue
             if(self.state==1):##White have to play
-                self.movePieces(movesList[chooseMove],movesList)
+                self.movePieces(movesList[int(chooseMove)],movesList)
             elif(self.state==-1):##Black have to play
-                self.movePieces(movesList[chooseMove],movesList)
+                self.movePieces(movesList[int(chooseMove)],movesList)
             
             
             self.writeHistory()
