@@ -1,5 +1,6 @@
 import ChessPieces
 import time
+import copy
 import datetime
 class ChessBoard(): 
     def __init__(self,loadpgnFile="noLoad",boardConfig=False,unicodeText=True):
@@ -9,7 +10,7 @@ class ChessBoard():
         self.blackPiecesList=[]
         self.whitePiecesList=[]
         self.history=[]
-        self.result=0
+        self.result="*"
         self.unicodeText=unicodeText
         if(not boardConfig):
         #Filling the board
@@ -46,35 +47,41 @@ class ChessBoard():
             with open(loadpgnFile,"r") as game:
                 l=game.read().split("1.")
                 movesHistory=("1."+l[1]).strip()
-                movesList=movesHistory.split(" ")
-                
-                for i in range(0,len(movesList),2):
-                    movesList[i]=movesList[i].split(".")[1]
-                #print(movesList)
-                #TRADUCTION PGN TO CLASS FORMAT
-
-                for move in movesList:
-                    print(move)
+                movesHistory=movesHistory.split(" ")
+                i=3
+                for move in movesHistory:
+                    if(i%3==0):#Move number to delete
+                        i+=1
+                        continue
+                    if(move=="1-0" or move=="0-1" or move=="1/2-1/2"):
+                        break
                     if(self.state==-1):#Black play
                         colorPlay="Black"
                     else:
                         colorPlay="White"
                     boardMoves=self.boardPossibleMoves(colorPlay)
-                    self.movePieces(self.pgnToMove(move,boardMoves),boardMoves)
+                    self.movePieces(self.pgnToMove(move,boardMoves,colorPlay),boardMoves)
+                    print(move)
+                    self.showBoard()
+                    i+=1
                 
                 
         except IOError as e:
             print(e)
-    def pgnToMove(self,move,boardMoves):
-
+    def pgnToMove(self,move,boardMoves,colorPlay):
+        posY=-1
+        posX=-1
         algebricNotation={
             "B":ChessPieces.Bishop,
             "R":ChessPieces.Rook,
             "Q":ChessPieces.Queen,
             "K":ChessPieces.King,
             "N":ChessPieces.Knight,
-            "O-O":"SmallCastle",
-            "O-O-O":"BigCastle"
+            "O-O":"KingCastle",
+            "O-O-O":"QueenCastle",
+            "1-0":"END",
+            "0-1":"END",
+            "1/2-1/2":"END"
         }
         
         pieceType=algebricNotation.get(move[0],ChessPieces.Pawn)
@@ -87,14 +94,68 @@ class ChessBoard():
                 indexY-=1
             moveX=int(ord(move[indexX]))-97
             moveY=(int(move[indexY])-8)*(-1)
-        elif(len(move)==4):#Mange
+        elif(len(move)==4 and move[1]=="x"):#Mange
             moveX=int(ord(move[2]))-97
             moveY=(int(move[3])-8)*(-1)
-        for moveBoard in boardMoves:
-            if(moveBoard[0]==moveX and moveBoard[1]==moveY and type(moveBoard[2])==pieceType):
-                return moveBoard
+        elif(pieceType=="KingCastle"):
+            if(colorPlay=="Black"):
+                moveX=5
+                moveY=0
+            else:
+                moveX=5
+                moveY=7
+            pieceType=ChessPieces.King
+        elif(pieceType=="QueenCastle"):
+            if(colorPlay=="Black"):
+                moveX=2
+                moveY=0
+            else:
+                moveX=2
+                moveY=7
+            pieceType=ChessPieces.King
+        else:#ambigiousMove
+            if(pieceType==ChessPieces.Pawn):
+                if(len(move)==3):
+                    moveX=int(ord(move[-2]))-97
+                    moveY=(int(move[-1])-8)*(-1)
+                    if(move[0].isdecimal()):
+                        posY=(int(move[0])-8)*(-1)
+                    else:
+                        posX=int(ord(move[0]))-97
+            else:#Autres moves
+                if(len(move)==4):#Sans ambiguite maximal
+                    moveX=int(ord(move[-2]))-97
+                    moveY=(int(move[-1])-8)*(-1)
+                    if(move[0].isdecimal()):
+                        posY=(int(move[1])-8)*(-1)
+                    else:
+                        posX=int(ord(move[1]))-97
+                elif(len(move)==5):
+                    posX=int(ord(move[1]))-97
+                    posY=(int(move[2])-8)*(-1)
+                    moveX=int(ord(move[-2]))-97
+                    moveY=(int(move[-1])-8)*(-1)
+        if(posX!=-1 and posY!=-1):#5len move
+            for moveBoard in boardMoves:
+                if(moveBoard[0]==moveX and moveBoard[1]==moveY and 
+                    (type(moveBoard[2])==pieceType) and moveBoard[2].x==posX and moveBoard[2].y==posY):
+                    return moveBoard
+        elif(posX!=-1):
+            for moveBoard in boardMoves:
+                if(moveBoard[0]==moveX and moveBoard[1]==moveY and 
+                    (type(moveBoard[2])==pieceType) and moveBoard[2].x==posX):
+                    return moveBoard
+        elif(posY!=-1):
+            for moveBoard in boardMoves:
+                if(moveBoard[0]==moveX and moveBoard[1]==moveY and 
+                    (type(moveBoard[2])==pieceType) and moveBoard[2].y==posY):
+                    return moveBoard
+        else:
+            for moveBoard in boardMoves:
+                if(moveBoard[0]==moveX and moveBoard[1]==moveY and (type(moveBoard[2])==pieceType)):
+                    return moveBoard
         self.showBoard()
-        return None
+        return False
     def theoryPossibleMove(self,color):
         movesList=[]
         if(color=="Black"):
@@ -104,13 +165,14 @@ class ChessBoard():
             for piece in self.whitePiecesList:
                 movesList.extend(piece.possibleMove())
         return movesList
-    def echec(self):
+    #Retourne la liste des pieces attaquant le roi pour le joueur qui joue
+    def echec(self,colorPlay):
        # ECHEC
         kingPosition=(0,0)
         attackingPiecesList=[]
         piecesList=[]
         movesList=[]
-        if(self.state==-1):#if black play check white move
+        if(colorPlay=="Black"):#if black play check white move
             piecesList=self.blackPiecesList
             movesList.extend(self.theoryPossibleMove("White"))
         else:
@@ -124,10 +186,10 @@ class ChessBoard():
             if(kingPosition==(moves[0],moves[1])):
                     attackingPiecesList.append(moves[2])
         return attackingPiecesList
-    def boardPossibleMoves(self,colorPlay):
+    def PseudoBoardPossibleMoves(self,colorPlay):
         movesList=self.theoryPossibleMove(colorPlay)
         possibleMovesList=[]
-        attackerList=self.echec()
+        attackerList=self.echec(colorPlay)
         piecesList=[]
         if(colorPlay=="White"):#White have to play
             piecesList=self.whitePiecesList
@@ -179,27 +241,54 @@ class ChessBoard():
                                 possibleMovesList.append(move)
         else:
             possibleMovesList.extend(movesList)
-        #Verifier que les mouvements ne créer pas d'échec
-        #for move in possibleMovesList:
-         #   predictionBoard=self
-          #  predictionBoard.movePieces(move,possibleMovesList)
-          #  if(predictionBoard.echec()!=[]):
-           #     print(move)
-             #   print(self.state)
-                #possibleMovesList.remove(move)
+        
+
         return possibleMovesList
+    #Verifier que les mouvements ne créer pas d'échec
+    def boardPossibleMoves(self,colorPlay):
+        predictionBoard=copy.deepcopy(self)
+        checked=False
+        possibleMovesList=predictionBoard.PseudoBoardPossibleMoves(colorPlay)
+        boardPossiblesMovesList=self.PseudoBoardPossibleMoves(colorPlay)
+        removeList=[]
+        for move in possibleMovesList:
+            moveX=move[2].x
+            predictionBoard.movePieces(move,possibleMovesList)
+            if(predictionBoard.echec(colorPlay)!=[]):
+                move[2].x=moveX
+                removeList.append(move)
+                checked=True
+            predictionBoard=copy.deepcopy(self)
+        if(checked):
+            #print(boardPossiblesMovesList)
+            for predMove in removeList:
+                for move in boardPossiblesMovesList:
+                    if(move[2].x==predMove[2].x and move[0]==predMove[0] and move[1]==predMove[1]):
+                        boardPossiblesMovesList.remove(move)
+            #print(boardPossiblesMovesList)
+        return boardPossiblesMovesList
+        
     def movePieces(self,moves,movesList):#moves is the a tuple from movesList
         endingMove=moves
         startingMove=(moves[2].x,moves[2].y,moves[2])
         checkingMove=False
-        #numberOfMoves=0
+        numberOfMoves=0
+        ambigiousPosition=""
         eatingMove=False
         promotedPawn=(False,None)
         #Checking unique moves
-        #for move in movesList:
-         #   if(moves[0]==move[0] and moves[1]==move[1]):
-          #      numberOfMoves+=1
-        #uniqueMove=numberOfMoves==1
+        for move in movesList:
+            if(move==moves):
+                numberOfMoves+=1
+            elif(moves[0]==move[0] and moves[1]==move[1] and type(moves[2])==type(move[2])):
+                if(moves[2].x!=move[2].x):
+                    ambigiousPosition=chr(moves[2].x+97)
+                elif(moves[2].y!=move[2].y):
+                    ambigiousPosition=str((moves[2].y)*(-1)+8)
+                else:
+                    ambigiousPosition=chr(moves[2].x+97)+str((moves[2].y)*(-1)+8)
+                numberOfMoves+=1
+        uniqueMove=(numberOfMoves==1,ambigiousPosition)
         movedPiece=self.board[moves[1]][moves[0]]
         #Checking eating move
         if(type(movedPiece)!=ChessPieces.Cases):
@@ -272,10 +361,14 @@ class ChessBoard():
         #Checking moves
         self.state=self.state*(-1)
         self.turn+=1
-        if(self.echec()!=[]):
+        if(self.state==-1):#Black play
+            colorPlay="Black"
+        else:
+            colorPlay="White"
+        if(self.echec(colorPlay)!=[]):
             checkingMove=True
 
-        self.history.append((startingMove,endingMove,checkingMove,eatingMove,promotedPawn))
+        self.history.append((startingMove,endingMove,checkingMove,eatingMove,promotedPawn,uniqueMove))
         
     def terminal_test(self):
         if(self.state==-1):
@@ -283,12 +376,20 @@ class ChessBoard():
         else:
             colorPlay="White"
         boardMoves=self.boardPossibleMoves(colorPlay)
-        if(boardMoves==[]):
+        if(boardMoves==[] and self.echec()!=[]):
             print("Partie terminé")
             print("Nombres de tours :{}".format(self.turn))
-            print("Victoire de {}".format(self.state*(-1)))
-            self.result=self.state*(-1)
-            print(self.echec()[0].color)
+            print("Victoire de {}".format(colorPlay))
+            if(colorPlay=="Black"):
+                self.result="1-0"
+            else:
+                self.result="0-1"
+            return True
+        elif(boardMoves==[]):
+            print("Partie terminé")
+            print("Nombres de tours :{}".format(self.turn))
+            print("Egalité !")
+            self.result="1/2-1/2"
             return True
         return False
     def boardConfiguration(self):
@@ -352,9 +453,10 @@ class ChessBoard():
             if(chooseMove=="resign"):
                 if(self.state==-1):
                     print("Black resign")
+                    self.result="1-0"
                 else:
                     print("White resign")
-                self.result=self.state*(-1)
+                    self.result="0-1"
                 break
             elif(chooseMove=="draw"):
                 if(self.state==-1):
@@ -364,7 +466,7 @@ class ChessBoard():
                 draw=input("you can reply with  y/n:")
                 if(draw=="y"):
                     print("it's a draw !")
-                    self.result=1/2
+                    self.result="1/2-1/2"
                     break
                 else:
                     print("Keep playing the draw is refused")
@@ -376,7 +478,7 @@ class ChessBoard():
                 self.movePieces(movesList[int(chooseMove)],movesList)
                 blackTime+=time.time()-blackStart
             
-            #self.writeHistory()
+        self.writeHistory()
     def showBoard(self):
         unicodeToText={
             ChessPieces.Bishop.__name__:"B",
@@ -421,9 +523,9 @@ class ChessBoard():
         round=self.turn
         white=""
         black=""
-        result="*"
+        result=self.result
         turn=1
-        moveNumber=1
+        moveNumber=0
         algebricNotation={
             ChessPieces.Bishop.__name__:"B",
             ChessPieces.Rook.__name__:"R",
@@ -443,18 +545,28 @@ class ChessBoard():
             historyFile.write("[Result {}]\n".format(result))
             #BODY
             for move in self.history:
-                #move form(startingMove,endingMove,checkingMove,eatingMove)
-                if(moveNumber%2!=0):
-                    historyFile.write("{}.".format(turn))
+                #move form(startingMove,endingMove,checkingMove,eatingMove,promotedPawn,uniqueMove)
+                if(moveNumber%2==0):
+                    historyFile.write("{}. ".format(turn))
                     turn+=1
                 if(move[3]):#EATING MOVE
                     if(type(move[1][2])==ChessPieces.Pawn):
-                        historyFile.write("{}x ".format(chr(move[0][0]+97)))
+                        historyFile.write("{}x".format(chr(move[0][0]+97)))
                     else:
                         historyFile.write("{}x".format(algebricNotation[move[1][2].__class__.__name__]))
                     historyFile.write("{}{}".format(chr(move[1][0]+97),move[1][1]*(-1)+8))
+                elif(type(move[1][2])==ChessPieces.King and abs(move[1][0]-move[0][0])==2):#Castling
+                    #kingside
+                    if(move[1][0]==6):
+                        historyFile.write("O-O")
+                    #queenside
+                    elif(move[1][0]==2):
+                        historyFile.write("O-O-O")
                 else:
                     historyFile.write("{}".format(algebricNotation[move[1][2].__class__.__name__]))
+                    if(not move[5][0]):#Ambigious move
+                        historyFile.write("{}".format(move[5][1]))
+                        
                     historyFile.write("{}{}".format(chr(move[1][0]+97),move[1][1]*(-1)+8))
                 if(move[4][0]):#PROMOTING PAWN
                     historyFile.write("={}".format(algebricNotation[move[4].__name__]))
@@ -463,8 +575,9 @@ class ChessBoard():
 
                 historyFile.write(" ")
                 moveNumber+=1
+            historyFile.write("{}".format(self.result))
 
 
                 
                 
-        print(self.history)
+        

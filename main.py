@@ -1,6 +1,6 @@
 import GameClass
 
 
-chess=GameClass.ChessBoard("historyCastle.pgn")
+chess=GameClass.ChessBoard("historyCheckMate.pgn")
 
 chess.startTheGame()

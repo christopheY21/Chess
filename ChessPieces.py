@@ -142,7 +142,6 @@ class King(ChessPiece):
             bigVide=True
             controlled=False
             for i in range(self.x-1,0,-1):
-                print(i)
                 if(type(self.chessBoard.board[self.y][i])!=Cases):
                     bigVide=False
                     break
