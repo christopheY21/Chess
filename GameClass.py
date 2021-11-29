@@ -64,7 +64,7 @@ class ChessBoard():
                     if(i%3==0):#Move number to delete
                         i+=1
                         continue
-                    if(move=="1-0" or move=="0-1" or move=="1/2-1/2"):
+                    if(move=="1-0" or move=="0-1" or move=="1/2-1/2" or move=="*"):
                         break
                     if(self.state==-1):#Black play
                         colorPlay="Black"
@@ -277,7 +277,7 @@ class ChessBoard():
         #Realisation de tout les mouvements et vérification si il n'y a pas d"échec
         for move in possibleMovesList:
             moveX=move[2].x
-            predictionBoard.movePieces(move,possibleMovesList)
+            predictionBoard.movePieces(move,possibleMovesList,False)
             if(predictionBoard.echec(colorPlay)!=[]):
                 move[2].x=moveX
                 removeList.append(move)
@@ -292,7 +292,7 @@ class ChessBoard():
             #print(boardPossiblesMovesList)
         return boardPossiblesMovesList
         
-    def movePieces(self,moves,movesList):#moves is the a tuple from movesList
+    def movePieces(self,moves,movesList,promoting=True):#moves is the a tuple from movesList
         """Permet de bouger les pieces sur le plateau"""
         endingMove=moves
         startingMove=(moves[2].x,moves[2].y,moves[2])
@@ -337,8 +337,9 @@ class ChessBoard():
         #Promotion move
         listOfPromotion=[ChessPieces.Queen,ChessPieces.Bishop,ChessPieces.Rook,ChessPieces.Knight]
         promotionResponse=0
-        if(moves[1]==0 and moves[2].color=="White" and type(moves[2])==ChessPieces.Pawn):
-            print("PROMOTION!")
+        if(moves[1]==0 and moves[2].color=="White" and type(moves[2])==ChessPieces.Pawn and promoting):
+            print("PROMOTION! for :{}".format(moves[2]))
+            print(moves[2].x)
             self.whitePiecesList.remove(moves[2])
             print("Choose a promotion :{}".format([str(i.__name__) for i in listOfPromotion]))
             promotionResponse=int(input("Choose a number:"))
@@ -347,7 +348,8 @@ class ChessBoard():
             self.board[moves[1]][moves[0]]=newPiece
             print("Vous avez choisi {}.".format(str(newPiece)))
             promotedPawn=(True,listOfPromotion[promotionResponse])
-        elif(moves[1]==7 and moves[2].color=="Black" and type(moves[2])==ChessPieces.Pawn):
+        elif(moves[1]==7 and moves[2].color=="Black" and type(moves[2])==ChessPieces.Pawn and promoting):
+            print("PROMOTION! for :{}".format(moves[2]))
             self.blackPiecesList.remove(moves[2])
             print("Choose a promotion :{}".format([str(i.__name__) for i in listOfPromotion]))
             promotionResponse=int(input("Choose a number:"))
@@ -399,13 +401,15 @@ class ChessBoard():
         """Fonction permettant de décider si le jeu est fini ou non"""
         if(self.state==-1):
             colorPlay="Black"
+            colorPlay2="White"
         else:
             colorPlay="White"
+            colorPlay2="Black"
         boardMoves=self.boardPossibleMoves()
-        if(boardMoves==[] and self.echec()!=[]):
+        if(boardMoves==[] and self.echec(colorPlay)!=[]):
             print("Partie terminé")
             print("Nombres de tours :{}".format(self.turn))
-            print("Victoire de {}".format(colorPlay))
+            print("Victoire de {}".format(colorPlay2))
             if(colorPlay=="Black"):
                 self.result="1-0"
             else:
