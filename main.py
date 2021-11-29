@@ -1,6 +1,6 @@
 import GameClass
-
-
-chess=GameClass.ChessBoard("historyCheckMate.pgn")
+import AiChess
+aiChess=AiChess.AiChess()
+chess=GameClass.ChessBoard(loadpgnFile="history2.pgn")
 
 chess.startTheGame()

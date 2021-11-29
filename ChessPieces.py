@@ -1,4 +1,23 @@
+"""
+Ce module implémente toutes les pièces sur un plateau d'échecs.
+ * Une case vide
+ * Roi
+ * Reine
+ * Fou
+ * Tour
+ * Pion
+ * Chevalier
+"""
 class ChessPiece():
+    """
+    C'est la classe mère dont toute les autres pièces vont être issues.
+    Elle définit la pièce sans spécifité
+    Elle prend en argument 
+    - la plateau d'échec associés
+    - la position x de la piece sur le plateau
+    - la position y
+    - la couleur de la pièce
+    """
     unicodeCharBlack="\u25A0"
     unicodeCharWhite="\u25A1"
     def __init__(self,chessBoard,positionY,positionX,color) -> None:
@@ -9,9 +28,15 @@ class ChessPiece():
     def possibleMove(self):
         pass
     def move(self,positionX,positionY):
+        """Une méthode pour changer l'emplacement interne de la pièce"""
         self.x=positionX
         self.y=positionY
     def moveChecker(self,x,y,movesList):
+        """C'est une méthode permettant de vérifier si la position donnée en argument est valide 
+         -> d'ajouter cette position dans mouveslist
+         Cette fonction est souvent utiliser dans le parcours de cases
+         Elle permet de retourner un boolean stopMove permettant d'arreter le parcours de cases
+        """
         stopMove=False
         if(x>7 or x<0 or y<0 or y>7):
             return True
@@ -25,6 +50,7 @@ class ChessPiece():
             stopMove=True
         return stopMove
     def __str__(self):
+        """Permet d'afficher la représentation en unicode de la pièce"""
         if(self.color=="Black"):
             return self.unicodeCharBlack
         else:
@@ -32,6 +58,7 @@ class ChessPiece():
     def __eq__(self, other):
         return self.x==other.x and self.y==other.y and self.__class__.__name__==other.__class__.__name__
 class Cases():
+    """C'est une classe permettant de représenter les cases vide du plateau"""
     unicodeCharBlack="\u25A0"
     unicodeCharWhite="\u25A1"
     def __init__(self,positionY,positionX,passantCase=[False,1]):
@@ -58,6 +85,7 @@ class Rook(ChessPiece):
         self.moved=True
         return super().move(positionX, positionY)
     def possibleMove(self):
+        """Renvoie tout les mouvements possibles de la pièce"""
         movesList=[]
         #Déplacement verticale ascendant
         for j in range((self.y)+1,8):
@@ -90,6 +118,7 @@ class King(ChessPiece):
         self.moved=True
         return super().move(positionX, positionY)
     def possibleMove(self):
+        """Renvoie tout les mouvements possibles de la pièce"""
         movesList=[]
         #C'est toute les cases théoriques où le roi peut se déplacer
         theoryMoves=[]
@@ -103,10 +132,11 @@ class King(ChessPiece):
         #Removes cases that are attacked
         opposingMovesList=[]
         piecesList=[]
-        if(self.chessBoard.state==-1):
-            piecesList.extend(self.chessBoard.whitePiecesList)
+        if(self.chessBoard.state==-1):#les noirs jouents
+            piecesList.extend(self.chessBoard.whitePiecesList)#On récupère les coups ennemis
         else:
             piecesList.extend(self.chessBoard.blackPiecesList)
+        #On enleve les mouvements du roi ennemis sinon on va faire une récursion
         for piece in piecesList:
             if(type(piece)==King):
                 piecesList.remove(piece)
@@ -114,6 +144,7 @@ class King(ChessPiece):
             opposingMovesList.extend(piece.possibleMove())
         movesList2=[]
         movesList2.extend(movesList)
+        #On matche les cases controllés par l'adversaire avec ceux du roi
         for kingMove in movesList:
             for attackerMove in opposingMovesList:
                 if(kingMove[0]==attackerMove[0] and kingMove[1]==attackerMove[1]):
@@ -169,6 +200,7 @@ class Queen(ChessPiece):
         return super().move(positionX, positionY)
 
     def possibleMove(self):
+        """Renvoie tout les mouvements possibles de la pièce"""
         movesList=[]
         #Déplacement verticale ascendant
         for j in range((self.y)+1,8):
@@ -217,6 +249,7 @@ class Bishop(ChessPiece):
         return super().move(positionX, positionY)
 
     def possibleMove(self):
+        """Renvoie tout les mouvements possibles de la pièce"""
         movesList=[]
         #diagonale haut droite
         for i,j in zip(range(self.x+1,8),range(self.y+1,8)):
@@ -245,22 +278,26 @@ class Pawn(ChessPiece):
     def __init__(self, chessBoard, positionY, positionX, color) -> None:
         super().__init__(chessBoard, positionY, positionX, color)
         self.moved=False
-        self.passant=[False,1]
+        self.passant=[False,1]#attribut permettant de savoir si le pion a effectuer un mouvement en passant et si oui dans quel tour
     def move(self, positionX, positionY):
         self.moved=True
+        #Changement de l'attribut passant du pion si il fait un mouvement en passant
         if(abs(self.y-positionY)==2):
             self.passant=[True,self.chessBoard.turn]
         else:
             self.passant=[False,self.chessBoard.turn]
         return super().move(positionX, positionY)
     def possibleMove(self):
+        """Renvoie tout les mouvements possibles de la pièce"""
         movesList=[]
+        #Comment le pion va ancer selon qui l'est noir ou blanc
         avance=1
         numberMoveCase=1
-        if(not self.moved):
+        if(not self.moved):#Un seul mouvement à 2 cases autorisé
             numberMoveCase=2
         if(self.color=="White"):
             avance=-1
+        #Init variable parcours
         start=self.x-1
         end=self.x+1
         if(start<0):
@@ -301,6 +338,7 @@ class Knight(ChessPiece):
     def move(self, positionX, positionY):
         return super().move(positionX, positionY)
     def possibleMove(self):
+        """Renvoie tout les mouvements possibles de la pièce"""
         movesList=[]
         theoryMoves=[]
         adjustList=[1,-1]

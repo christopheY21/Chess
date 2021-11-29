@@ -2,10 +2,18 @@ import ChessPieces
 import time
 import copy
 import datetime
-class ChessBoard(): 
-    def __init__(self,loadpgnFile="noLoad",boardConfig=False,unicodeText=True):
+class ChessBoard():
+    """
+    C'est la classe permettant de représenter le plateau d'echec
+    * loadpgnFile -> permet de charger un fichier pgn
+    * boardConfig -> permet de choisir si on veut faire une configuration manuelle
+    * unicodeText -> permet de choisir la représentation des pieces sous format texte ou unicode
+    * ai -> permet d'ajouter une ia #En developpement
+    """
+    def __init__(self,loadpgnFile="noLoad",boardConfig=False,unicodeText=True,ai=None):
         self.state=1# -1 Black : 1 White -> state white have to play
         self.turn=1
+        self.ai=ai
         self.board=[[ChessPieces.Cases(j,i) for i in range(8)] for j in range(8)]
         self.blackPiecesList=[]
         self.whitePiecesList=[]
@@ -43,11 +51,14 @@ class ChessBoard():
         #self.showBoard()
 
     def loadPgnGame(self,loadpgnFile):
+        """Méthode permettant de charger un fichier pgn sur le plateau de l'instance"""
         try:
             with open(loadpgnFile,"r") as game:
-                l=game.read().split("1.")
+                l=game.read().split("\n1.")#Séparation en-tête et mouvements
                 movesHistory=("1."+l[1]).strip()
-                movesHistory=movesHistory.split(" ")
+                movesHistory=movesHistory.replace("+","")
+                
+                movesHistory=movesHistory.split(" ")# Récupération de tous les mouvements
                 i=3
                 for move in movesHistory:
                     if(i%3==0):#Move number to delete
@@ -59,16 +70,20 @@ class ChessBoard():
                         colorPlay="Black"
                     else:
                         colorPlay="White"
-                    boardMoves=self.boardPossibleMoves(colorPlay)
-                    self.movePieces(self.pgnToMove(move,boardMoves,colorPlay),boardMoves)
+                    boardMoves=self.boardPossibleMoves()
+                    #Réalisation du mouvement sur le plateau de l'instance
                     print(move)
+                    
+                    self.movePieces(self.pgnToMove(move,boardMoves,colorPlay),boardMoves)
                     self.showBoard()
+
                     i+=1
                 
                 
         except IOError as e:
             print(e)
     def pgnToMove(self,move,boardMoves,colorPlay):
+        """Fonction permettant de traduire un mouvement pgn en un mouvement de la classe"""
         posY=-1
         posX=-1
         algebricNotation={
@@ -126,7 +141,7 @@ class ChessBoard():
                 if(len(move)==4):#Sans ambiguite maximal
                     moveX=int(ord(move[-2]))-97
                     moveY=(int(move[-1])-8)*(-1)
-                    if(move[0].isdecimal()):
+                    if(move[1].isdecimal()):
                         posY=(int(move[1])-8)*(-1)
                     else:
                         posX=int(ord(move[1]))-97
@@ -155,8 +170,9 @@ class ChessBoard():
                 if(moveBoard[0]==moveX and moveBoard[1]==moveY and (type(moveBoard[2])==pieceType)):
                     return moveBoard
         self.showBoard()
-        return False
+        return None
     def theoryPossibleMove(self,color):
+        """Smaller function returning basic movments of all the pieces"""
         movesList=[]
         if(color=="Black"):
             for piece in self.blackPiecesList:
@@ -165,8 +181,8 @@ class ChessBoard():
             for piece in self.whitePiecesList:
                 movesList.extend(piece.possibleMove())
         return movesList
-    #Retourne la liste des pieces attaquant le roi pour le joueur qui joue
     def echec(self,colorPlay):
+        """Retourne la liste des pieces attaquant le roi pour le joueur qui joue"""
        # ECHEC
         kingPosition=(0,0)
         attackingPiecesList=[]
@@ -187,6 +203,7 @@ class ChessBoard():
                     attackingPiecesList.append(moves[2])
         return attackingPiecesList
     def PseudoBoardPossibleMoves(self,colorPlay):
+        """méthode plus avancé que theoryPossibleMove permettant de gerer les mouvements lors des échecs"""
         movesList=self.theoryPossibleMove(colorPlay)
         possibleMovesList=[]
         attackerList=self.echec(colorPlay)
@@ -195,7 +212,7 @@ class ChessBoard():
             piecesList=self.whitePiecesList
         else:
             piecesList=self.blackPiecesList
-        if(attackerList!=[]):
+        if(attackerList!=[]):#On est en echec
             kingPosition=(-1,-1)
             for piece in piecesList:
                 if(type(piece)==ChessPieces.King):
@@ -210,6 +227,7 @@ class ChessBoard():
             for attacker in attackerList:
                 horizontalAdvance=0
                 verticalAdvance=0
+                #Déterminer la position de l'attaquant par rapport au roi pour savoir dans quel sens parcourir
                 if((kingPosition[0]-attacker.x)<0):
                     horizontalAdvance=1
                 else:
@@ -244,13 +262,19 @@ class ChessBoard():
         
 
         return possibleMovesList
-    #Verifier que les mouvements ne créer pas d'échec
-    def boardPossibleMoves(self,colorPlay):
+    def boardPossibleMoves(self):
+        """Derniere fonction verifiant que les mouvements ne créer pas d'échec
+        C'est la fonction a utiliser pour obtenir les mouvements des pieces"""
         predictionBoard=copy.deepcopy(self)
         checked=False
-        possibleMovesList=predictionBoard.PseudoBoardPossibleMoves(colorPlay)
-        boardPossiblesMovesList=self.PseudoBoardPossibleMoves(colorPlay)
+        if (self.state==-1):
+            colorPlay="Black"
+        else:
+            colorPlay="White"
+        possibleMovesList=predictionBoard.PseudoBoardPossibleMoves(colorPlay)#Les mouvements possibles du pseudo aussi
+        boardPossiblesMovesList=self.PseudoBoardPossibleMoves(colorPlay)#Les mouvements possibles du pseudo
         removeList=[]
+        #Realisation de tout les mouvements et vérification si il n'y a pas d"échec
         for move in possibleMovesList:
             moveX=move[2].x
             predictionBoard.movePieces(move,possibleMovesList)
@@ -260,7 +284,7 @@ class ChessBoard():
                 checked=True
             predictionBoard=copy.deepcopy(self)
         if(checked):
-            #print(boardPossiblesMovesList)
+            #Enlever le mouvement de la liste a retourner
             for predMove in removeList:
                 for move in boardPossiblesMovesList:
                     if(move[2].x==predMove[2].x and move[0]==predMove[0] and move[1]==predMove[1]):
@@ -269,6 +293,7 @@ class ChessBoard():
         return boardPossiblesMovesList
         
     def movePieces(self,moves,movesList):#moves is the a tuple from movesList
+        """Permet de bouger les pieces sur le plateau"""
         endingMove=moves
         startingMove=(moves[2].x,moves[2].y,moves[2])
         checkingMove=False
@@ -331,7 +356,7 @@ class ChessBoard():
             self.board[moves[1]][moves[0]]=newPiece
             promotedPawn=(True,listOfPromotion[promotionResponse])
             print("Vous avez choisi {}.".format(str(newPiece)))
-        #Rook
+        #Castling
         elif(type(moves[2])==ChessPieces.King and abs(moves[0]-moves[2].x)==2):
             moves[2].move(moves[0],moves[1])
             self.board[moves[1]][moves[0]]=moves[2]
@@ -371,11 +396,12 @@ class ChessBoard():
         self.history.append((startingMove,endingMove,checkingMove,eatingMove,promotedPawn,uniqueMove))
         
     def terminal_test(self):
+        """Fonction permettant de décider si le jeu est fini ou non"""
         if(self.state==-1):
             colorPlay="Black"
         else:
             colorPlay="White"
-        boardMoves=self.boardPossibleMoves(colorPlay)
+        boardMoves=self.boardPossibleMoves()
         if(boardMoves==[] and self.echec()!=[]):
             print("Partie terminé")
             print("Nombres de tours :{}".format(self.turn))
@@ -421,34 +447,60 @@ class ChessBoard():
             self.showBoard()
             reponse=input("Entre 'q' pour quittez / c pour continuez:")
     def printMovesList(self,movesList):
+        """Fonction permettant d'afficher de manières plus lisible les coups possible"""
         i=0
         for move in movesList:
             print((move[0],move[1],str(move[2])), end=" ")
             print(i)
             i+=1
     def startTheGame(self):
+        """Méthode permettant de démarrer un jeu et d'y jouer"""
         whiteTime=0
         blackTime=0
+        whitePlayer="a"
+        blackPlayer="p"
+        chooseMove=""
+        if(self.ai==None):
+            rep=input("Select White player AI/Personne :enter a/p:")
+            whitePlayer=rep
+            rep2=input("Select Black player AI/Personne :enter a/p:")
+            blackPlayer=rep2
         while(not self.terminal_test()):
-            
+            self.showBoard()
             if(self.state==-1):
                 blackStart=time.time()
 
                 colorPlay="Black"
                 print("Le temps de jeu des noirs est :{}".format(datetime.timedelta(seconds=blackTime)))
                 print("C'est au tour des Noirs de jouer!")
+                movesList=self.boardPossibleMoves()
+                self.printMovesList(movesList)
+                if(blackPlayer=="p"):
+                    print("You can resign if you input 'resign' you can propose a draw with 'draw':")
+                    chooseMove=input("Which move do you chose ?:")
+                    if(chooseMove.isdecimal()):
+                        moveChoice=movesList[int(chooseMove)]
+                else:
+                    pass
             else:
-            
-                whiteStart=time.time()
-                
+                whiteStart=time.time() 
                 colorPlay="White"
                 print("Le temps de jeu des blancs est :{}".format(datetime.timedelta(seconds=whiteTime)))
                 print("C'est au tour des blanc de jouer!")
-            self.showBoard()
-            movesList=self.boardPossibleMoves(colorPlay)
-            self.printMovesList(movesList)
-            print("You can resign if you input 'resign' you can propose a draw with 'draw':")
-            chooseMove=input("Which move do you chose ?:")
+                movesList=self.boardPossibleMoves()
+                self.printMovesList(movesList)
+                if(whitePlayer=="p"):
+                    print("You can resign if you input 'resign' you can propose a draw with 'draw':")
+                    chooseMove=input("Which move do you chose ?:")
+                    if(chooseMove.isdecimal()):
+                        moveChoice=movesList[int(chooseMove)]
+                else:
+                    self.ai.initializeGame(self)
+                    abDecision=self.ai.alpha_beta_decision("White")
+                    print("Alpha Beta choisi :{}".format(abDecision))
+                    moveChoice=abDecision
+
+
             #chooseMove=0
             if(chooseMove=="resign"):
                 if(self.state==-1):
@@ -471,11 +523,12 @@ class ChessBoard():
                 else:
                     print("Keep playing the draw is refused")
                     continue
+            
             if(self.state==1):##White have to play
-                self.movePieces(movesList[int(chooseMove)],movesList)
+                self.movePieces(moveChoice,movesList)
                 whiteTime+=time.time()-whiteStart
             elif(self.state==-1):##Black have to play
-                self.movePieces(movesList[int(chooseMove)],movesList)
+                self.movePieces(moveChoice,movesList)
                 blackTime+=time.time()-blackStart
             
         self.writeHistory()
